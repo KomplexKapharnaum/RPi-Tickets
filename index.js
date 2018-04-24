@@ -137,6 +137,35 @@ app.get('/stop', function(req, res) {
     });
     res.redirect('/');
 });
+app.get('/salve', function(req, res) {
+    var job = {
+      files: [],
+      cut: true,
+      nbr: 1,
+      pause: 0,
+      txt: false,
+    }
+
+    job.files.push({relpath:"/DEBUT_amiens_cut_1.jpg",data:null})
+    job.files.push({relpath:"/DEBUT_amiens_cut2.jpg",data:null})
+    job.files.push({relpath:"/DEBUT_amiens_cut3.jpg",data:null})
+    job.files.push({relpath:"/DEBUT_amiens_cut4.jpg",data:null})
+    job.files.push({relpath:"/DEBUT_amiens_cut5.jpg",data:null})
+    job.files.push({relpath:"/DEBUT_amiens_cut6.jpg",data:null})
+    job.files.push({relpath:"/DEBUT_amiens_cut7.jpg",data:null})
+    job.files.push({relpath:"/DEBUT_amiens_cut8.jpg",data:null})
+    job.files.push({relpath:"/DEBUT_INVITATION_cut.jpg",data:null})
+
+    // Do job only on local or send it to all peers (based on ALONE global var)
+    if (ALONE){
+      	alone_doPrint(job);
+    }else{
+      	PeerMachine.broadcast('doPrint', job)
+    }
+
+    res.redirect('/');
+
+});
 app.post('/printText', function(req, res) {
         console.log('Request:', req.body);
 	var job = {
