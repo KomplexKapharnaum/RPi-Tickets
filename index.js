@@ -7,8 +7,8 @@ var path = require('path')
 var in_array = require('in_array')
 var sharp = require('sharp');
 
-//var LISTPATH = '/media/usb'
-var LISTPATH = '/home/mgr/Pictures'
+var LISTPATH = '/media/usb'
+//var LISTPATH = '/home/mgr/Pictures'
 var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp']
 
 var PeerMachine = require('./kpi-peers/peermachine.js')();
