@@ -25,7 +25,7 @@ else:
 	doConvert = True
 
 if doConvert:
-	call(["convert", sys.argv[1], "-resize", "576x", "/tmp/print.jpg"])
+	call(["convert", sys.argv[1], "-resize", "576x", "-background", "white", "-alpha", "remove", "/tmp/print.jpg"])
 
 p = Usb(0x04b8,0x0e15,0)
 files = glob.glob('/tmp/print*.jpg')
