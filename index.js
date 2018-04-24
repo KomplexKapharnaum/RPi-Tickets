@@ -8,31 +8,13 @@ var in_array = require('in_array')
 var sharp = require('sharp');
 
 var LISTPATH = '/media/usb'
+//var LISTPATH = '/home/mgr/Pictures'
 var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp']
 
-var smoke = require('smokesignal')
-
-var node = smoke.createNode({
-  port: 8495
-, address: smoke.localIp('192.168.0.1/255.255.255.0') // Tell it your subnet and it'll figure out the right IP for you
-, minPeerNo: 1
-//, seeds: [{port: 13, address:'192.168.2.100'}] // the address of a seed (a known node)
-})
-
-node.on('connect', function() {
-  console.log('connected')
-  node.broadcast.write('HEYO! I\'m here')
-})
-node.on('disconnect', function() {
-  // Bah, all peers gone.
-})
-
-var callback = require('callback-stream')
-var log = callback(function (err, data) {
-  console.log(err, data)
-})
-node.broadcast.pipe(log)
-
+var PeerMachine = require('./kpi-peers/peermachine.js')();
+PeerMachine.on( 'logguer.log', (data, from)=>console.log('received', data, ' <- ',from) );
+PeerMachine.on('doPrint', (data)=>print(data))
+PeerMachine.start();
 
 
 
@@ -110,7 +92,8 @@ io.on('connection', function(client) {
     });
 
     client.on('print', function(data) {
-      print(data)
+      //print(data)
+      PeerMachine.broadcast('doPrint', data)
     });
 
 });
