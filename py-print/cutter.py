@@ -233,8 +233,11 @@ class Cutter():
 
     def stop(self):
         debug("Q+: stop")
-        self._queue.put(Cutter.STOP)
+        self._fsmcutter.queue.put(Cutter.STOP)
         #self._queue.join()
+
+    def quit(self):
+        self._fsmcutter.queue.put(None)
 
     def turn(self, pin):
         debug("Q+: turn {}".format(pin))

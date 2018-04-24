@@ -21,6 +21,7 @@ parser.add_argument("-t", "--text", action="store_true")
 parser.add_argument("-c", "--cut", action="store_true")
 parser.add_argument("-f", "--fullcut", action="store_true")
 parser.add_argument("-o", "--old", action="store_true")
+parser.add_argument("-n", "--nbr", type=int, default=1)
 args = parser.parse_args()
 
 from PIL import Image, ImageDraw, ImageFont
@@ -84,12 +85,15 @@ else:
     p = KXKMPrinter('rpi', 0x04b8, 0x0e15, 0)
 print("{}".format(files))
 for f in files:
-    p.image(f)
-    if len(sys.argv) > 2:
+    for i in range(args.nbr):
+        p.image(f)
         if args.cut:
             p.cut(mode='PART')
         elif args.fullcut:
             p.cut(mode='FULL')
+        else:
+            pass    # no cut
+
 
 # CUT AT THE END IF NO CUT INBETWEEN
 # if len(sys.argv) > 3 and not args['cut']:

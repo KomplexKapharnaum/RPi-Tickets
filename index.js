@@ -36,14 +36,22 @@ if (!ALONE){
 
 function alone_doPrint(job) {
   console.log('JOB alone:', job)
-  for (var k=0; k<job.nbr; k++)
-    for (var file of job.files) {
-      worker.enqueue( new Task(file.relpath, job.cut, file.data, job.pause, job.txt) )
-    }
+  if (job.fast != 'on') {
+	  for (var k = 0; k < job.nbr; k++) {
+		  for (var file of job.files) {
+			  worker.enqueue(new Task(file.relpath, job.cut, file.data, job.pause, job.txt, job.fast))
+		  }
+	  }
+  }else{
+  	console.log("FAST ! : nbr = ", job.nbr)
+  	for (var file of job.files) {
+			  worker.enqueue(new Task(file.relpath, job.cut, file.data, job.pause, job.txt, job.nbr))
+		  }
+  }
 }
 
 class Task {
-  constructor(path, cut, data, wait, txt) {
+  constructor(path, cut, data, wait, txt, fast) {
     if (txt == false){
 	    this.path = JSON.parse(JSON.stringify(path))
     }else{
@@ -52,6 +60,7 @@ class Task {
     this.cut = cut
     this.data = data
     this.wait = wait
+    this.fast = fast
     this.txt = txt
   }
   execute(work) {
@@ -59,7 +68,7 @@ class Task {
     console.log("txt : "+this.txt)
     print(this.path, this.cut, this.data, ()=>{
       setTimeout(()=>{work.next()}, this.wait)
-    }, this.txt)
+    }, this.txt, this.fast)
   }
 }
 
@@ -90,10 +99,14 @@ var worker = new Worker()
 
 print('blank.png', 1, fs.readFileSync(path.resolve(__dirname, 'blank.png')))
 
-function print(relpath, cut, buffer, onEnd, text) {
+function print(relpath, cut, buffer, onEnd, text, fast) {
   if (text === undefined){
 	text = false;
   }
+  if (fast === undefined || fast === "off"){
+      fast = false;
+  }
+
   console.log('-'+relpath)
   var filepath
   if (buffer) {
@@ -106,7 +119,7 @@ function print(relpath, cut, buffer, onEnd, text) {
 	filepath = LISTPATH+relpath
   }
 
-  var cmd = path.resolve(__dirname, 'py-print/print')+" "+((text == true)?"-t ":"")+"\""+filepath+"\" "+((cut == 'cut' || cut == '1')?"-c ":"")+((cut == 'full')?"-f ":"")+((OLD == true)?"-o ":"")
+  var cmd = path.resolve(__dirname, 'py-print/print')+" "+((text == true)?"-t ":"")+"\""+filepath+"\" "+((cut == 'cut' || cut == '1')?"-c ":"")+((cut == 'full')?"-f ":"")+((OLD == true)?"-o ":"")+((fast != false)?"-n "+fast+" ":"")
   console.log(cmd)
   exec(cmd, (err, stdout, stderr) => {
     if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath, ()=>{})
@@ -190,6 +203,7 @@ app.post('/printText', function(req, res) {
 	        cut: req.body.cut,
 	        nbr: req.body.nbr,
 	        pause: req.body.pause,
+            fast: req.body.fast,
 	        txt: true,
 	}
 	job.files.push({relpath:req.body.txt,data:null})
@@ -208,6 +222,7 @@ app.post('/printFile', function(req, res) {
       cut: req.body.cut,
       nbr: req.body.nbr,
       pause: req.body.pause,
+      fast: req.body.fast,
       txt: false,
     }
 

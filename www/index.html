@@ -25,6 +25,7 @@
   <form action="/printText" method="POST" enctype="multipart/form-data" id="textform">
     <input type="hidden" id="print_cut_t" name="cut" value="cut">
     <!--<input type="hidden" id="print_cut_full_t" name="cut_full" value="0">-->
+    <input type="hidden" id="print_fast_t" name="fast" value="off">
     <input type="hidden" id="print_pause_t" name="pause" value="1">
     <input type="hidden" id="print_nbr_t" name="nbr" value="1">
     <div class="file-field input-field">
@@ -40,6 +41,7 @@
   <!-- UPLOAD -->
   <form action="/printFile" method="POST" enctype="multipart/form-data" id="fileform">
     <input type="hidden" id="print_relpath" name="relpath" value="">
+    <input type="hidden" id="print_fast" name="fast" value="off">
     <input type="hidden" id="print_cut" name="cut" value="cut">
     <!--<input type="hidden" id="print_cut_full" name="cut_full" value="0">-->
     <input type="hidden" id="print_pause" name="pause" value="1">
@@ -92,6 +94,11 @@
           <label style="margin-right: 30px; margin-left: 5px"><input name="cut" type="radio" value="full" />
             <span>Full Cut</span>
           </label>
+        </p>
+
+        <!-- FAST -->
+        <p class="range-field">
+          <label><input type="checkbox" name="fast" id="fast" /><span>Fast</span></label>
         </p>
 
         <br />
@@ -254,6 +261,12 @@
         $('#nbr_i').html($('#modal1').find('#nbr').val())
         $('#print_nbr').val($('#modal1').find('#nbr').val())
         $('#print_nbr_t').val($('#modal1').find('#nbr').val())
+      })
+
+      $('#fast').on('input', ()=>{
+        $('#print_fast').val($("#fast:checked").val());
+        $('#print_fast_t').val($("#fast:checked").val());
+        console.log('fast : ', $("#fast:checked").val());
       })
 
       $('#pause').on('change', ()=>{
