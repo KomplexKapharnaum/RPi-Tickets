@@ -1,0 +1,20 @@
+#!/usr/bin/python
+
+from escpos.printer import Usb
+import sys
+
+p = Usb(0x04b8,0x0e15,0)
+
+for arg in sys.argv[1:]:
+	while True:
+		try:
+			if arg == "reset":
+				p.hw('RESET')
+			if arg == "cut":
+				p.cut()
+		except usb.core.USBError:
+			continue
+		else:
+			break
+
+				

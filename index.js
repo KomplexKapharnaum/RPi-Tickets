@@ -64,6 +64,10 @@ class Worker {
     if (this.tasks.length > 0) this.tasks.pop().execute(this)
     else this.running = false
   }
+  flush (){
+    while (this.tasks.length) { this.tasks.pop(); }
+    this.running = false
+  }
   enqueue(newtask) {
     this.tasks.unshift(newtask)
     if (!this.running) {
@@ -106,6 +110,17 @@ app.use(bodyParser.json());
 app.use(fileUpload());
 app.get('/', function(req, res,next) {
     res.sendFile(__dirname + '/www/index.html');
+});
+app.get('/stop', function(req, res) {
+    worker.flush();
+    var cmd = path.resolve(__dirname, 'py-print/cmd')+" reset cut reset"
+    console.log(cmd)
+    exec(cmd, (err, stdout, stderr) => {
+      if (err) {
+        console.error(`exec error: ${err}`);
+        return;
+      }
+    });
 });
 app.post('/printFile', function(req, res) {
      console.log(req.body)
