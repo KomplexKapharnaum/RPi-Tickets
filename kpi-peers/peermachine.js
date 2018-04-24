@@ -15,7 +15,7 @@ function PeerMachine()
     **/
 
     this.start = function(portastic_options) {
-        if (portastic_options === undefined) portastic_options = { min : 9000, max : 32000 }
+        if (portastic_options === undefined) portastic_options = { min : 9000, max : 10000 }
         // Find free port
         portastic.find(portastic_options).then(function(ports) {
             var port = ports[0];
@@ -108,6 +108,7 @@ function PeerMachine()
 
     // Get peers count
     this.peersCount = function() {
+      if (!this.machine) return 0
         var count = 0;
         var clients = this.machine.getClients()
         for (var k in clients) {
