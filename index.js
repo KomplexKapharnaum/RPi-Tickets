@@ -19,7 +19,7 @@ var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp', '.pdf']
 var PeerMachine = require('./kpi-peers/peermachine.js')();
 PeerMachine.on( 'logguer.log', (data, from)=>console.log('received', data, ' <- ',from) );
 PeerMachine.on('doPrint', (job)=>{
-  // console.log('JOB received via KPi-ppers: ', job)
+  //console.log('JOB received via KPi-ppers: ', job)
   for (var k=0; k<job.nbr; k++)
     for (var file of job.files) {
       worker.enqueue( new Task(file.relpath, job.cut, file.data, job.pause) )
@@ -33,6 +33,7 @@ if (!ALONE){
 }
 
 function alone_doPrint(job) {
+  console.log('JOB alone:', job)
   for (var k=0; k<job.nbr; k++)
     for (var file of job.files) {
       worker.enqueue( new Task(file.relpath, job.cut, file.data, job.pause, job.txt) )
@@ -137,7 +138,7 @@ app.get('/stop', function(req, res) {
     res.redirect('/');
 });
 app.post('/printText', function(req, res) {
-        console.log(req.body);
+        console.log('Request:', req.body);
 	var job = {
 	        files: [],
 	        cut: req.body.cut,
@@ -155,7 +156,7 @@ app.post('/printText', function(req, res) {
         res.redirect('/');
 });
 app.post('/printFile', function(req, res) {
-     console.log(req.body)
+     console.log('Request:', req.body)
     var job = {
       files: [],
       cut: req.body.cut,
