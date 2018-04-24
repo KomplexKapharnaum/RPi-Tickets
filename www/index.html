@@ -15,6 +15,7 @@
 <body>
   <div id="title">IMMOBILES - Tickets Printer</div>
   <div id="peers"></div>
+  <div id="printer_mode"></div>
 
   <div class="btn" id="salve">
     <span>Envoyer une salve</span>
@@ -59,6 +60,9 @@
   <div class="btn" id="fileprint">
     <span>Print</span>
   </div>
+  <div class="btn" id="config">
+    <span>Config</span>
+  </div>
   <div class="btn" id="stop">
     <span>Stop !</span>
   </div>
@@ -76,7 +80,7 @@
       <div id="print_name"></div>
       <br />
         <br/>
-      <form action="#">
+      <form action="/config">
         <!-- Switch -->
         <p id="radio_cut">
           <label style="margin-right: 30px; margin-left: 5px"><input name="cut" type="radio" value="nocut"  />
@@ -105,6 +109,40 @@
     </div>
     <div class="modal-footer">
       <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat" id="doPrint">PRINT</a>
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+    </div>
+  </div>
+
+  <!-- Modal Structure -->
+  <div id="modal2" class="modal">
+    <div class="modal-content">
+      <h4>Printer configuration</h4>
+        <br/>
+      <form id="configform" action="/config" method="POST" enctype="multipart/form-data">
+        <!-- Switch -->
+        <p id="radio_config_alone">
+          Connection :
+          <label style="margin-right: 30px; margin-left: 5px"><input name="alone" type="radio" value="alone" />
+            <span>Standalone</span>
+          </label>
+          <label style="margin-right: 30px; margin-left: 5px"><input name="alone" type="radio" value="peers"  />
+            <span>Peers</span>
+          </label>
+        </p> <br />
+        <p id="radio_config_old">
+          Imprimante :
+          <label style="margin-right: 30px; margin-left: 5px"><input name="old" type="radio" value="fullcut" />
+            <span>Modified</span>
+          </label>
+          <label style="margin-right: 30px; margin-left: 5px"><input name="old" type="radio" value="old"  />
+            <span>Vanilla</span>
+          </label>
+        </p>
+
+      </form>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat" id="doConfig">SAVE</a>
       <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
     </div>
   </div>
@@ -138,7 +176,23 @@
       }else{
 	$("#peers").html(n+' printers connected')
       }
-    })
+    });
+
+    socket.on('config', (config) => {
+    	if(config.alone){
+    		$(":radio[value='alone']").attr('checked',true);
+        }else{
+    		$(":radio[value='peers']").attr('checked',true);
+        }
+
+        if(config.old){
+    		$(":radio[value='old']").attr('checked',true);
+    		$('#printer_mode').html("Vanilla printer");
+        }else{
+    		$(":radio[value='fullcut']").attr('checked',true);
+    		$('#printer_mode').html("Modified printer");
+        }
+    });
 
     socket.on('listNode', (data) => {
       //data = JSON.parse(data)
@@ -152,6 +206,10 @@
       // console.log(data)
       addDirectory(data, $("#files"))
       $('.collapsible').collapsible();
+    });
+
+    socket.on('reload', ()=> {
+    	location.reload();
     });
 
     function addDirectory(list, container) {
@@ -256,6 +314,14 @@
 		$('#textform').submit()
 	}
       })
+
+      $('#config').on('click', ()=>{
+        $('#modal2').modal('open')
+      });
+
+      $('#doConfig').on('click', ()=>{
+          $('#configform').submit();
+      });
 
     });
 

@@ -5,6 +5,7 @@ Description=Tickets printer
 Type=simple
 ExecStart=/usr/bin/node /root/RPi-Tickets/index.js
 ExecStop=/bin/fuser -k 80/tcp
+WorkingDirectory=/root/RPi-Tickets
 Restart=always
            
 [Install]

@@ -12,7 +12,7 @@ var conf = require('./tickets.conf.json');
 
 var WEBPORT = 80
 var ALONE = conf.alone  //true	// Set if the printer should act ALONE or not (with PeerMachine)
-var OLD = ! conf.fullcut 
+var OLD = conf.old
 
 var LISTPATH = '/mnt/usb'
 //var LISTPATH = '/home/mgr/Pictures'
@@ -127,6 +127,21 @@ app.use(fileUpload());
 app.get('/', function(req, res,next) {
     res.sendFile(__dirname + '/www/index.html');
 });
+app.post('/config', function(req, res) {
+    console.log('Request:', req.body);
+    conf.alone = req.body.alone === "alone";
+    conf.old = req.body.old === "old";
+    //cmd = "/usr/bin/systemctl restart tickets";
+    res.redirect('/');
+    //console.log(cmd);
+    let data = JSON.stringify(conf);
+    fs.writeFileSync('/root/RPi-Tickets/tickets.conf.json', data);
+    //msleep(1500);
+    //io.emit('reload');
+    //msleep(1000);
+    //exec(cmd, (err, stdout, stderr) => {});
+    process.exit();
+});
 app.get('/stop', function(req, res) {
     worker.flush();
     var cmd = path.resolve(__dirname, 'py-print/reset.sh')+" reset cut reset"
@@ -223,6 +238,8 @@ app.post('/printFile', function(req, res) {
 
 io.on('connection', function(client) {
     console.log('Client connected...');
+
+    client.emit('config', conf);
 
     client.on('getlist', function(data) {
       var list = allFilesSync(LISTPATH)
