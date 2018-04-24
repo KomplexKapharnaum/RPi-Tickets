@@ -7,8 +7,34 @@ var path = require('path')
 var in_array = require('in_array')
 var sharp = require('sharp');
 
-var LISTPATH = '/home/mgr/Pictures'
+var LISTPATH = '/media/usb'
 var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp']
+
+var smoke = require('smokesignal')
+
+var node = smoke.createNode({
+  port: 8495
+, address: smoke.localIp('192.168.0.1/255.255.255.0') // Tell it your subnet and it'll figure out the right IP for you
+, minPeerNo: 1
+//, seeds: [{port: 13, address:'192.168.2.100'}] // the address of a seed (a known node)
+})
+
+node.on('connect', function() {
+  console.log('connected')
+  node.broadcast.write('HEYO! I\'m here')
+})
+node.on('disconnect', function() {
+  // Bah, all peers gone.
+})
+
+var callback = require('callback-stream')
+var log = callback(function (err, data) {
+  console.log(err, data)
+})
+node.broadcast.pipe(log)
+
+
+
 
 var printer = require("node-thermal-printer");
 printer.init({
@@ -47,7 +73,7 @@ const allFilesSync = (dir, fileList = []) => {
 }
 
 function print(job) {
-  console.log("Resize and Print image")
+  console.log("Resize and Print image", job['file'])
   if (job['nbr'] < 1) return;
   sharp(job['file'])
     .resize(576)
@@ -70,9 +96,9 @@ function print(job) {
     .catch( err => console.log('Resize failed') );
 }
 
-app.use(express.static(__dirname + '/../www/'));
+app.use(express.static(__dirname + '/www/'));
 app.get('/', function(req, res,next) {
-    res.sendFile(__dirname + '/../www/index.html');
+    res.sendFile(__dirname + '/www/index.html');
 });
 
 io.on('connection', function(client) {

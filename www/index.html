@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta charset="utf-8">
   <title></title>
   <meta name="description" content="">
@@ -59,11 +60,15 @@
     var socket = io();
 
     socket.on('connect', function(data) {
-        console.log('Connected!');
+        console.log('Connected :)');
         socket.emit('getlist')
     });
     socket.on('error', console.error.bind(console));
     socket.on('message', console.log.bind(console));
+    socket.on('disconnect', function() {
+        console.log('Disconnected :(');
+        $("#files").html('No connection to RPi-Tickets..')
+    });
 
     socket.on('listNode', (data) => {
       //data = JSON.parse(data)
