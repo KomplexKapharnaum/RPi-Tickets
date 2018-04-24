@@ -10,6 +10,7 @@ var in_array = require('in_array')
 const { spawnSync, exec} = require('child_process');
 
 var WEBPORT = 80
+var ALONE = true	// Set if the printer should act ALONE or not (with PeerMachine)
 
 var LISTPATH = '/mnt/usb'
 //var LISTPATH = '/home/mgr/Pictures'
@@ -25,7 +26,18 @@ PeerMachine.on('doPrint', (job)=>{
     }
 
 })
-PeerMachine.start();
+
+if (!ALONE){
+ // Active PeerMachine only if not ALONE
+ PeerMachine.start();
+}
+
+function alone_doPrint(job) {
+  for (var k=0; k<job.nbr; k++)
+    for (var file of job.files) {
+      worker.enqueue( new Task(file.relpath, job.cut, file.data, job.pause) )
+    }
+}
 
 class Task {
   constructor(path, cut, data, wait) {
@@ -116,7 +128,12 @@ app.post('/printFile', function(req, res) {
       }
     }
 
-    PeerMachine.broadcast('doPrint', job)
+    // Do job only on local or send it to all peers (based on ALONE global var)
+    if (ALONE){
+    	alone_doPrint(job);
+    }else{
+    	PeerMachine.broadcast('doPrint', job)
+    }
     // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
     // let sampleFile = req.files.sampleFile;
     res.redirect('/');
@@ -143,9 +160,14 @@ io.on('connection', function(client) {
 
 function countingPeers() {
   // console.log(PeerMachine.peersCount())
-  io.emit('peers', PeerMachine.peersCount())
+  if(ALONE){
+  	io.emit('peers', -1)
+  }else{
+        io.emit('peers', PeerMachine.peersCount())
+  }
 }
 setInterval(countingPeers, 3000);
+
 
 // LIST USB FILES
 function compare(a,b) {

@@ -95,7 +95,11 @@
     });
 
     socket.on('peers', (n)=>{
-      $("#peers").html(n+' printers connected')
+      if(n == "-1"){
+      	$("#peers").html('Standalone mode - No printers connected')
+      }else{
+	$("#peers").html(n+' printers connected')
+      }
     })
 
     socket.on('listNode', (data) => {
