@@ -35,22 +35,28 @@ if (!ALONE){
 function alone_doPrint(job) {
   for (var k=0; k<job.nbr; k++)
     for (var file of job.files) {
-      worker.enqueue( new Task(file.relpath, job.cut, file.data, job.pause) )
+      worker.enqueue( new Task(file.relpath, job.cut, file.data, job.pause, job.txt) )
     }
 }
 
 class Task {
-  constructor(path, cut, data, wait) {
-    this.path = JSON.parse(JSON.stringify(path))
+  constructor(path, cut, data, wait, txt) {
+    if (txt == false){
+	    this.path = JSON.parse(JSON.stringify(path))
+    }else{
+	    this.path = path
+    }
     this.cut = cut
     this.data = data
     this.wait = wait
+    this.txt = txt
   }
   execute(work) {
-    // console.log('/'+this.path)
+    console.log(this.path)
+    console.log("txt : "+this.txt)
     print(this.path, this.cut, this.data, ()=>{
       setTimeout(()=>{work.next()}, this.wait)
-    })
+    }, this.txt)
   }
 }
 
@@ -81,16 +87,23 @@ var worker = new Worker()
 
 print('blank.png', 1, fs.readFileSync(path.resolve(__dirname, 'blank.png')))
 
-function print(relpath, cut, buffer, onEnd) {
+function print(relpath, cut, buffer, onEnd, text) {
+  if (text === undefined){
+	text = false;
+  }
   console.log('-'+relpath)
   var filepath
   if (buffer) {
     filepath = '/tmp/'+relpath
     fs.writeFileSync(filepath, buffer);
   }
-  else filepath = LISTPATH+relpath
+  else if(text == true){
+	filepath = relpath
+  }else{
+	filepath = LISTPATH+relpath
+  }
 
-  var cmd = path.resolve(__dirname, 'py-print/print')+" \""+filepath+"\" "+((cut=='1')?"1":"0")
+  var cmd = path.resolve(__dirname, 'py-print/print')+" "+((text == true)?"-t ":"")+"\""+filepath+"\" "+((cut=='1')?"-c":"")
   console.log(cmd)
   exec(cmd, (err, stdout, stderr) => {
     if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath, ()=>{})
@@ -123,6 +136,24 @@ app.get('/stop', function(req, res) {
     });
     res.redirect('/');
 });
+app.post('/printText', function(req, res) {
+        console.log(req.body);
+	var job = {
+	        files: [],
+	        cut: req.body.cut,
+	        nbr: req.body.nbr,
+	        pause: req.body.pause,
+	        txt: true,
+	}
+	job.files.push({relpath:req.body.txt,data:null})
+	// Do job only on local or send it to all peers (based on ALONE global var)
+        if (ALONE){
+        	alone_doPrint(job);
+        }else{
+        	PeerMachine.broadcast('doPrint', job)
+        }
+        res.redirect('/');
+});
 app.post('/printFile', function(req, res) {
      console.log(req.body)
     var job = {
@@ -130,6 +161,7 @@ app.post('/printFile', function(req, res) {
       cut: req.body.cut,
       nbr: req.body.nbr,
       pause: req.body.pause,
+      txt: false,
     }
 
     for (var p of req.body.relpath.split(',')) {

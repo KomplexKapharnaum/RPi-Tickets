@@ -34,6 +34,22 @@
     </div>
   </form>
 
+  <!-- TEXT -->
+  <form action="/printText" method="POST" enctype="multipart/form-data" id="textform">
+    <input type="hidden" id="print_cut" name="cut" value="1">
+    <input type="hidden" id="print_pause" name="pause" value="1">
+    <input type="hidden" id="print_nbr" name="nbr" value="1">
+    <div class="file-field input-field">
+      <div class="btn">
+        <span>TEXT</span>
+        <!--<input type="none"  name="text" multiple id="txtbtn">-->
+      </div>
+      <div class="file-path-wrapper">
+        <input class="file-path validate" type="text" name="txt" id="txt" placeholder="Write text to print">
+      </div>
+   </div>
+  </form>
+
   <div class="btn" id="fileprint">
     <span>Print</span>
   </div>
@@ -203,7 +219,11 @@
         console.log(job)
         socket.emit('printUsb', job)*/
         console.log($('#print_relpath').val())
-        $('#fileform').submit()
+	if ( $('#txt').val() == "" ){
+	        $('#fileform').submit()
+	}else{
+		$('#textform').submit()
+	}
       })
 
     });
