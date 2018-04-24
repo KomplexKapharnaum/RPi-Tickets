@@ -113,7 +113,7 @@ app.get('/', function(req, res,next) {
 });
 app.get('/stop', function(req, res) {
     worker.flush();
-    var cmd = path.resolve(__dirname, 'py-print/cmd')+" reset cut reset"
+    var cmd = path.resolve(__dirname, 'py-print/reset.sh')+" reset cut reset"
     console.log(cmd)
     exec(cmd, (err, stdout, stderr) => {
       if (err) {
