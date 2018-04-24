@@ -48,3 +48,12 @@ class KXKMPrinter(Usb):
             self._raw(ESC + b"d" + six.int2byte(2))
             time.sleep(0.05)
 
+
+    def _test(self):
+        self.cut()
+        time.sleep(0.5)
+        self.cut()
+        time.sleep(0.5)
+        self.cut(mode='FULL')
+        time.sleep(0.5)
+        self.cutter._test()

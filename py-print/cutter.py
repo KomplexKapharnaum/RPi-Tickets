@@ -28,7 +28,7 @@ class Cutter(threading.Thread):
     OFF = GPIO.LOW
 
     HALF_TIME = 0.19
-    TIMEOUT = 1 # sec
+    TIMEOUT = 1.5 # sec
 
     def __init__(self, half_time=None, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
@@ -47,6 +47,8 @@ class Cutter(threading.Thread):
         self._queue.put(None)
 
     def join(self, *args, **kwargs):
+        if self._state != 'stop':
+            time.sleep(Cutter.TIMEOUT)
         self.kill()
         threading.Thread.join(self,*args,**kwargs)
 
@@ -55,6 +57,23 @@ class Cutter(threading.Thread):
         GPIO.output(Cutter.R, Cutter.OFF)
         print("STOP : ok")
         self._state = 'stop'
+
+    def _test(self):
+        print("ALL OFF")
+        GPIO.output(Cutter.L, Cutter.OFF)
+        GPIO.output(Cutter.R, Cutter.OFF)
+        time.sleep(0.5)
+        print("Left")
+        GPIO.output(Cutter.R, Cutter.OFF)
+        GPIO.output(Cutter.L, Cutter.ON)
+        time.sleep(1)
+        print("Right")
+        GPIO.output(Cutter.R, Cutter.ON)
+        GPIO.output(Cutter.L, Cutter.OFF)
+        time.sleep(1)
+        print("ALL OFF")
+        GPIO.output(Cutter.L, Cutter.OFF)
+        GPIO.output(Cutter.R, Cutter.OFF)
 
     def _turn(self, pin):
         self._state = 'turn'
@@ -68,6 +87,7 @@ class Cutter(threading.Thread):
 
     def wait_pos(self, target_pos=REPOS):
         start = time.time()
+        debug("start wait pos..")
         while time.time() - start < Cutter.TIMEOUT:
             pos = GPIO.input(Cutter.Pos)
             debug("pos : {}".format(pos))
@@ -75,7 +95,7 @@ class Cutter(threading.Thread):
                 debug("--break")
                 break
             t = GPIO.wait_for_edge(Cutter.Pos, GPIO.BOTH,
-                                   timeout=Cutter.TIMEOUT*500)
+                                   timeout=int(Cutter.TIMEOUT*500))
             if t is None:
                 self.stop()
                 break
@@ -96,7 +116,7 @@ class Cutter(threading.Thread):
             if mode == CUT_FULL:
                 debug("Cut")
                 self.turn(Cutter.R)
-                time.sleep(self.half_time)
+                time.sleep(self.half_time*1.5)
             elif mode == CUT_HALF:
                 debug("Start cut")
                 self.turn(Cutter.R)
