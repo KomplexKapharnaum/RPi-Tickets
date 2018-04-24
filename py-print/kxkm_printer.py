@@ -29,7 +29,7 @@ class KXKMPrinter(Usb):
 
         if feed:
             self._raw(ESC + b"d" + six.int2byte(4))
-            time.sleep(0.07)
+            time.sleep(0.15)
 
         mode = mode.upper()
         if mode not in ('FULL', 'PART'):
@@ -44,9 +44,11 @@ class KXKMPrinter(Usb):
             self.cutter.stop()
             raise e
 
+        time.sleep(0.2)
+
         if feed:
             self._raw(ESC + b"d" + six.int2byte(2))
-            time.sleep(0.05)
+            time.sleep(0.1)
 
 
     def _test(self):
@@ -57,3 +59,5 @@ class KXKMPrinter(Usb):
         self.cut(mode='FULL')
         time.sleep(0.5)
         self.cutter._test()
+        time.sleep(0.1)
+        self.cutter._repos()
