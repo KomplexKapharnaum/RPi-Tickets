@@ -65,8 +65,8 @@ class KXKMPrinter(Usb):
 #        time.sleep(0.45)
 #        time.sleep(0.45)
 
-        if feed:
-            self._raw(ESC + b"d" + six.int2byte(4))
+        #if feed:
+         #   self._raw(ESC + b"d" + six.int2byte(4))
             #time.sleep(0.00)
 
 
