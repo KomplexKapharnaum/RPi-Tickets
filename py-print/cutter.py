@@ -29,7 +29,7 @@ class Cutter(threading.Thread):
     OFF = GPIO.LOW
 
     HALF_TIME = 0.20
-    FULL_TIME = 0.25
+    FULL_TIME = 0.32
     TIMEOUT = 1.2 # sec
 
     def __init__(self, half_time=None, full_time=None, *args, **kwargs):
