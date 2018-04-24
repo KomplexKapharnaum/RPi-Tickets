@@ -106,7 +106,7 @@ function print(relpath, cut, buffer, onEnd, text) {
 	filepath = LISTPATH+relpath
   }
 
-  var cmd = path.resolve(__dirname, 'py-print/print')+" "+((text == true)?"-t ":"")+"\""+filepath+"\" "+((cut == 'cut' || cut == '1')?"-c ":"")+((cut == 'fullcut')?"-f ":"")+((OLD == true)?"-o ":"")
+  var cmd = path.resolve(__dirname, 'py-print/print')+" "+((text == true)?"-t ":"")+"\""+filepath+"\" "+((cut == 'cut' || cut == '1')?"-c ":"")+((cut == 'full')?"-f ":"")+((OLD == true)?"-o ":"")
   console.log(cmd)
   exec(cmd, (err, stdout, stderr) => {
     if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath, ()=>{})
