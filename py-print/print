@@ -32,10 +32,10 @@ def draw_background(canva, t_size):
 		canva.paste(back,(i*b_size[0],0))
 		
 
-def generate_trame(txt, pt=550):
+def generate_trame(txt, pt=518):
 	text = txt.upper()
-#	pt=550
-	factor=1.3
+#	pt=pt
+	factor=1.36
 
 	font = ImageFont.truetype(os.path.join(os.path.dirname(__file__), "./infini-gras.ttf"),pt)
 	t_size = list(font.getsize(text))
@@ -47,7 +47,7 @@ def generate_trame(txt, pt=550):
 
 	draw_background(canva,t_size)
 
-	draw.text((0, (576-int(t_size[1]*factor))/2), text, font=font, fill=0)
+	draw.text((0, (567-int(t_size[1]*factor))/2), text, font=font, fill=0)
 
 	return canva.rotate(270, expand=1)
 
