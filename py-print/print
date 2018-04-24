@@ -52,6 +52,8 @@ def generate_trame(txt, pt=550):
 	return canva.rotate(270, expand=1)
 
 if not args.text:
+	if args.print == "/mnt/usb":
+		sys.exit(0)	# Dirty fix
 	if args.print.endswith('.pdf'):
 		doConvert = True
 	#	print("DO CONVERT because {} end with .pdf".format(sys.argv[1]))
