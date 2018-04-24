@@ -3,15 +3,20 @@
 
 from escpos.printer import Usb
 from escpos.escpos import *
-from .cut import Cutter, CUT_HALF, CUT_FULL
+import time
+from cutter import Cutter, CUT_HALF, CUT_FULL
 
 class KXKMPrinter(Usb):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, mode, *args, **kwargs):
         Usb.__init__(self, *args, **kwargs)
         self.cutter = Cutter()
+        if mode == 'rpi':
+            self.cut = self._cut_rpi
+        else:
+            self.cut = Usb.cut
 
-    def cut(self, mode='FULL', feed=True):
+    def _cut_rpi(self, mode='PART', feed=True):
         """ Cut paper.
         Without any arguments the paper will be cut completely. With 'mode=PART' a partial cut will
         be attempted. Note however, that not all models can do a partial cut. See the documentation of
@@ -22,18 +27,24 @@ class KXKMPrinter(Usb):
         :raises ValueError: if mode not in ('FULL', 'PART')
         """
 
-        if not feed:
-            self._raw(GS + b'V' + six.int2byte(66) + b'\x00')
-            return
-
-        self.print_and_feed(6)
+        if feed:
+            self._raw(ESC + b"d" + six.int2byte(4))
+            time.sleep(0.07)
 
         mode = mode.upper()
         if mode not in ('FULL', 'PART'):
             raise ValueError("Mode must be one of ('FULL', 'PART')")
 
-        if mode == "PART":
-            self.cutter.cut(CUT_HALF)
-        elif mode == "FULL":
-            self.cutter.cut(CUT_FULL)
+        try:
+            if mode == "PART":
+                self.cutter.cut(CUT_HALF)
+            elif mode == "FULL":
+                self.cutter.cut(CUT_FULL)
+        except Exception as e:
+            self.cutter.stop()
+            raise e
+
+        if feed:
+            self._raw(ESC + b"d" + six.int2byte(2))
+            time.sleep(0.05)
 

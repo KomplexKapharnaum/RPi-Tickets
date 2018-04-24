@@ -3,7 +3,7 @@
 # https://python-escpos.readthedocs.io/en/latest/user/raspi.html
 # imagemagick
 
-from .kxkm_printer import KXKMPrinter
+from kxkm_printer import KXKMPrinter
 import sys, os
 from subprocess import call
 import glob
@@ -11,83 +11,88 @@ import argparse
 
 files = glob.glob('/tmp/print*.jpg')
 for f in files:
-        os.remove(f)
+    os.remove(f)
 
 doConvert = False
 
 parser = argparse.ArgumentParser()
 parser.add_argument("print", type=str)
-parser.add_argument("-t","--text", action="store_true")
-parser.add_argument("-c","--cut", action="store_true")
-parser.add_argument("-h","--half_cut", action="store_true")
+parser.add_argument("-t", "--text", action="store_true")
+parser.add_argument("-c", "--cut", action="store_true")
+parser.add_argument("-f", "--fullcut", action="store_true")
+parser.add_argument("-o", "--old", action="store_true")
 args = parser.parse_args()
 
 from PIL import Image, ImageDraw, ImageFont
 
+
 def draw_background(canva, t_size):
-	back = Image.open(os.path.join(os.path.dirname(__file__), "fond.jpg"))
-	b_size = back.size
-	n =  int(t_size[0] / b_size[0]) + 1
-	for i in range(0,n):
-		#print("i = {} / p_x = {}".format(i, i*b_size[0]))
-		canva.paste(back,(i*b_size[0],0))
-		
+    back = Image.open(os.path.join(os.path.dirname(__file__), "fond.jpg"))
+    b_size = back.size
+    n = int(t_size[0] / b_size[0]) + 1
+    for i in range(0, n):
+        # print("i = {} / p_x = {}".format(i, i*b_size[0]))
+        canva.paste(back, (i * b_size[0], 0))
+
 
 def generate_trame(txt, pt=518):
-	text = txt.upper()
-#	pt=pt
-	factor=1.36
+    text = txt.upper()
+    #	pt=pt
+    factor = 1.36
 
-	font = ImageFont.truetype(os.path.join(os.path.dirname(__file__), "./infini-gras.ttf"),pt)
-	t_size = list(font.getsize(text))
-	print("text size = {}".format(t_size))
+    font = ImageFont.truetype(
+        os.path.join(os.path.dirname(__file__), "./infini-gras.ttf"), pt)
+    t_size = list(font.getsize(text))
+    print("text size = {}".format(t_size))
 
-	canva = Image.new('L', (t_size[0], 567), color=255)
-	draw = ImageDraw.Draw(canva)
+    canva = Image.new('L', (t_size[0], 567), color=255)
+    draw = ImageDraw.Draw(canva)
 
+    draw_background(canva, t_size)
 
-	draw_background(canva,t_size)
+    draw.text((0, (567 - int(t_size[1] * factor)) / 2), text, font=font, fill=0)
 
-	draw.text((0, (567-int(t_size[1]*factor))/2), text, font=font, fill=0)
+    return canva.rotate(270, expand=1)
 
-	return canva.rotate(270, expand=1)
 
 if not args.text:
-	if args.print == "/mnt/usb":
-		sys.exit(0)	# Dirty fix
-	if args.print.endswith('.pdf'):
-		doConvert = True
-	#	print("DO CONVERT because {} end with .pdf".format(sys.argv[1]))
-	else:
-		call(['cp', args.print, "/tmp/print.jpg"])   # Copy image in case convert fails
-		im = Image.open(args.print)
-		width, height = im.size
-		if width < 576 and not width == 567:
-		  doConvert = True
+    if args.print == "/mnt/usb":
+        sys.exit(0)  # Dirty fix
+    if args.print.endswith('.pdf'):
+        doConvert = True
+    #	print("DO CONVERT because {} end with .pdf".format(sys.argv[1]))
+    else:
+        call(['cp', args.print,
+              "/tmp/print.jpg"])  # Copy image in case convert fails
+        im = Image.open(args.print)
+        width, height = im.size
+        if width < 576 and not width == 567:
+            doConvert = True
 
-	if doConvert:
-	#	print("convert ..")
-		call(["convert", args.print, "-resize", "576x", "-background", "white", "-alpha", "remove", "/tmp/print.jpg"])
-	#	print("end !")
-	files = glob.glob('/tmp/print*.jpg')
+    if doConvert:
+        #	print("convert ..")
+        call(["convert", args.print, "-resize", "576x", "-background", "white",
+              "-alpha", "remove", "/tmp/print.jpg"])
+    #	print("end !")
+    files = glob.glob('/tmp/print*.jpg')
 else:
-	files = [generate_trame(args.print), ]
-	
+    files = [generate_trame(args.print), ]
 
-p = KXKMPrinter(0x04b8,0x0e15,0)
+if args.old:
+    p = KXKMPrinter('old', 0x04b8, 0x0e15, 0)
+else:
+    p = KXKMPrinter('rpi', 0x04b8, 0x0e15, 0)
 print("{}".format(files))
 for f in files:
-	p.image(f)
-	if len(sys.argv) > 2:
-		if args.cut:
-			p.cut(mode='FULL')
-		elif args.half_cut:
-			p.cut(mode='PART')
-
-
+    p.image(f)
+    if len(sys.argv) > 2:
+        if args.cut:
+            p.cut(mode='PART')
+        elif args.fullcut:
+            p.cut(mode='FULL')
 
 # CUT AT THE END IF NO CUT INBETWEEN
-#if len(sys.argv) > 3 and not args['cut']:
+# if len(sys.argv) > 3 and not args['cut']:
 #	p.cut()
 
 
