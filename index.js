@@ -7,15 +7,14 @@ var path = require('path')
 var in_array = require('in_array')
 var sharp = require('sharp');
 
-var LISTPATH = '/media/usb'
-//var LISTPATH = '/home/mgr/Pictures'
+//var LISTPATH = '/media/usb'
+var LISTPATH = '/home/mgr/Pictures'
 var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp']
 
 var PeerMachine = require('./kpi-peers/peermachine.js')();
 PeerMachine.on( 'logguer.log', (data, from)=>console.log('received', data, ' <- ',from) );
 PeerMachine.on('doPrint', (data)=>print(data))
 PeerMachine.start();
-
 
 
 var printer = require("node-thermal-printer");
@@ -98,5 +97,11 @@ io.on('connection', function(client) {
     });
 
 });
+
+function countingPeers() {
+	// console.log(PeerMachine.peersCount())
+  io.emit('peers', PeerMachine.peersCount())
+}
+setInterval(countingPeers, 3000);
 
 server.listen(4200);

@@ -7,6 +7,8 @@ function PeerMachine()
     this.server = null;
     this.modules = [];
     this.callbacks = {};
+    this.machine = null;
+    this.events_channel = null;
 
     /**
     SERVERS
@@ -22,28 +24,28 @@ function PeerMachine()
             that.server = new IoServer(port, 'KPi-peer');
 
             // create Main Channel
-            var machine = that.server.addChannel('/peer').p2p();
+            that.machine = that.server.addChannel('/peer').p2p();
 
             // create Event Channel
-            var events_channel = that.server.addChannel('/event/peer');
+            that.events_channel = that.server.addChannel('/event/peer');
 
             // Route Machine input to modules
-            machine.on('/input', that.execute);
+            that.machine.on('/input', that.execute);
 
             // Route Machine state events to event channel
-            machine.on('/state', events_channel.send);
+            that.machine.on('/state', that.events_channel.send);
 
             // inform new RADIO client of Machine status (known peers and methods)
-            events_channel.on('/state/newclient', function(ev, cli) {
+            that.events_channel.on('/state/newclient', function(ev, cli) {
 
                 var status = { peers: {}, methods: that.getMethods() };
-                var peers = machine.activeLinks();
+                var peers = that.machine.activeLinks();
                 for (var name in peers) status.peers[name] = peers[name].url;
-                //console.log(status);
-                events_channel.send('/status', status, Object.keys(cli)[0]);
+                // console.log(cli);
+                that.events_channel.send('/status', status, Object.keys(cli)[0]);
             });
 
-            // machine.on('/output', function(cmd, data) {
+            // that.machine.on('/output', function(cmd, data) {
             //     //console.log('OUTPUT: ', cmd, data);
             // })
 
@@ -102,6 +104,18 @@ function PeerMachine()
     // Get name
     this.name = function() {
         if(that.server) return this.server.name;
+    }
+
+    // Get peers count
+    this.peersCount = function() {
+        var count = 0;
+        var clients = this.machine.getClients()
+        for (var k in clients) {
+            if (clients.hasOwnProperty(k)) {
+               ++count;
+            }
+        }
+        return count
     }
 
     // TOOLS
