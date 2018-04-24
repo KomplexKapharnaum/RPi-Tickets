@@ -8,10 +8,11 @@ var fs = require('fs')
 var path = require('path')
 var in_array = require('in_array')
 const { spawnSync, exec} = require('child_process');
+var conf = require('./tickets.conf.json');
 
 var WEBPORT = 80
-var ALONE = true	// Set if the printer should act ALONE or not (with PeerMachine)
-var OLD = false
+var ALONE = conf.alone  //true	// Set if the printer should act ALONE or not (with PeerMachine)
+var OLD = ! conf.fullcut 
 
 var LISTPATH = '/mnt/usb'
 //var LISTPATH = '/home/mgr/Pictures'
