@@ -28,7 +28,7 @@ class Cutter(threading.Thread):
     ON = GPIO.HIGH
     OFF = GPIO.LOW
 
-    HALF_TIME = 0.20
+    HALF_TIME = 0.18
     FULL_TIME = 0.32
     TIMEOUT = 1.2 # sec
 
