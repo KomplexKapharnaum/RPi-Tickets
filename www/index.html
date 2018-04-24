@@ -24,6 +24,7 @@
       <br />
       <form action="#">
         <input type="hidden" id="print_path" value="">
+        <input type="hidden" id="print_relpath" value="">
         <!-- Switch -->
         Cut:
         <div class="switch">
@@ -117,6 +118,7 @@
       console.log(el)
       $('#modal1').find('#print_name').html(el.name)
       $('#modal1').find('#print_path').val(el.path)
+      $('#modal1').find('#print_relpath').val(el.relpath)
       $('#modal1').modal('open')
     }
 
@@ -140,7 +142,9 @@
       $('#doPrint').on('click', ()=> {
         var job = {
           cut: $('#modal1').find('#print_cut').prop('checked'),
-          file: $('#modal1').find('#print_path').val(),
+          path: $('#modal1').find('#print_path').val(),
+          relpath: $('#modal1').find('#print_relpath').val(),
+          name: $('#modal1').find('#print_name').val(),
           nbr: $('#modal1').find('#print_nbr').val(),
           pause: $('#modal1').find('#print_pause').val(),
         }

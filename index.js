@@ -42,7 +42,7 @@ function compare(a,b) {
 const allFilesSync = (dir, fileList = []) => {
   fs.readdirSync(dir).forEach(file => {
     const filePath = path.join(dir, file)
-    var entry =  {name: file, path: filePath }
+    var entry =  {name: file, path: filePath, relpath: filePath.split(LISTPATH)[1] }
     if (fs.statSync(filePath).isDirectory()) {
       entry['children'] = allFilesSync(filePath)
       if (entry['children'].length > 0) fileList.push(entry)
@@ -55,9 +55,10 @@ const allFilesSync = (dir, fileList = []) => {
 }
 
 function print(job) {
-  console.log("Resize and Print image", job['file'])
+  var filepath = LISTPATH+job['relpath']
+  console.log("Resize and Print image", filepath)
   if (job['nbr'] < 1) return;
-  sharp(job['file'])
+  sharp(filepath)
     .resize(576)
     .png()
     .toBuffer()
