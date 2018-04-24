@@ -28,9 +28,9 @@ class Cutter(threading.Thread):
     ON = GPIO.HIGH
     OFF = GPIO.LOW
 
-    HALF_TIME = 0.18
-    FULL_TIME = 0.32
-    TIMEOUT = 1.2 # sec
+    HALF_TIME = 0.17
+    FULL_TIME = 0.25
+    TIMEOUT = 1 # sec
 
     def __init__(self, half_time=None, full_time=None, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
