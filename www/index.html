@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+  <meta charset="utf-8">
+  <title></title>
+  <meta name="description" content="">
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+  <script src="js/jquery-3.3.1.min.js"></script>
+  <script src="js/socket.io.js"></script>
+  <script src="js/materialize.min.js"></script>
+</head>
+<body>
+  <div id="title">IMMOBILES - Tickets Printer</div>
+  <div id="files"></div>
+
+  <!-- Modal Structure -->
+  <div id="modal1" class="modal">
+    <div class="modal-content">
+      <h4>Print option</h4>
+      <div id="print_name"></div>
+      <br />
+      <form action="#">
+        <input type="hidden" id="print_path" value="">
+        <!-- Switch -->
+        Cut:
+        <div class="switch">
+          <label><input type="checkbox" id="print_cut" checked>
+            <span class="lever"></span>
+          </label>
+        </div>
+        <br />
+        <!-- NBR -->
+        <p class="range-field">
+          Quantity: <span id="print_q">1</span>
+          <input type="range" id="print_nbr" min="1" max="50" value="1" />
+        </p>
+        <!-- PAUSE -->
+        <p class="range-field">
+          Pause between: <span id="print_p">3000</span> ms
+          <input type="range" id="print_pause" min="200" max="4000" value="3000" />
+        </p>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat" id="doPrint">PRINT</a>
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+    </div>
+  </div>
+
+  <script>
+    if (!Array.prototype.last){
+      Array.prototype.last = function(){
+          return this[this.length - 1];
+      };
+    };
+
+    var socket = io();
+
+    socket.on('connect', function(data) {
+        console.log('Connected!');
+        socket.emit('getlist')
+    });
+    socket.on('error', console.error.bind(console));
+    socket.on('message', console.log.bind(console));
+
+    socket.on('listNode', (data) => {
+      //data = JSON.parse(data)
+      // console.log(data)
+      addDirectory(data, $("#files"))
+      $('.collapsible').collapsible();
+    });
+
+    socket.on('listPython', (data) => {
+      //data = JSON.parse(data)
+      // console.log(data)
+      addDirectory(data, $("#files"))
+      $('.collapsible').collapsible();
+    });
+
+    function addDirectory(list, container) {
+      var ul = $('<ul class="collapsible">').appendTo(container)
+
+      for (var el of list) {
+
+        // directory
+        if (el.children) {
+          if (el.children.length) {
+            var li = $('<li>').appendTo(ul)
+            var hd = $('<div class="collapsible-header">')
+                        .append('<i class="material-icons">folder_open</i>')
+                        .append(el.name).appendTo(li)
+            var bd = $('<div class="collapsible-body">').appendTo(li)
+            addDirectory(el.children, bd)
+            li.addClass('directory')
+          }
+        }
+        // file
+        else {
+          var li = $('<li>').appendTo(ul)
+          var hd = $('<div class="collapsible-header">')
+                        .append('<i class="material-icons">image</i>')
+                        .append(el.name).appendTo(li)
+          hd.on('click', promptPrint.bind(null,el) )
+          li.addClass('file')
+        }
+      }
+    }
+
+    function promptPrint(el) {
+      console.log(el)
+      $('#modal1').find('#print_name').html(el.name)
+      $('#modal1').find('#print_path').val(el.path)
+      $('#modal1').modal('open')
+    }
+
+    $(document).ready(function(){
+      $('.modal').modal()
+
+      $('#print_nbr').on('change', ()=>{
+        $('#print_q').html($('#modal1').find('#print_nbr').val())
+      })
+      $('#print_nbr').on('input', ()=>{
+        $('#print_q').html($('#modal1').find('#print_nbr').val())
+      })
+
+      $('#print_pause').on('change', ()=>{
+        $('#print_p').html($('#modal1').find('#print_pause').val())
+      })
+      $('#print_pause').on('input', ()=>{
+        $('#print_p').html($('#modal1').find('#print_pause').val())
+      })
+
+      $('#doPrint').on('click', ()=> {
+        var job = {
+          cut: $('#modal1').find('#print_cut').prop('checked'),
+          file: $('#modal1').find('#print_path').val(),
+          nbr: $('#modal1').find('#print_nbr').val(),
+          pause: $('#modal1').find('#print_pause').val(),
+        }
+        console.log(job)
+        socket.emit('print', job)
+      })
+
+    });
+
+  </script>
+</body>
+</html>
