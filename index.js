@@ -121,6 +121,7 @@ app.get('/stop', function(req, res) {
         return;
       }
     });
+    res.redirect('/');
 });
 app.post('/printFile', function(req, res) {
      console.log(req.body)
