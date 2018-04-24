@@ -4,5 +4,6 @@ import cutter
 
 c = cutter.Cutter()
 #c.stop()
+c.repos()
 c.quit()
 

@@ -151,12 +151,14 @@ class Cutter():
         with self._fsmcutter.lock:
             self._cut_full()
 
-    def _cut_half(self):
-        self._fsmcutter.queue.put(Cutter.R)
-        time.sleep(self.half_time)
+    def _cut_half(self, start=None):
+        if start is None:
+            self._fsmcutter.queue.put(Cutter.R)
+            time.sleep(self.half_time)
         self._fsmcutter.queue.put(Cutter.L)
-        time.sleep(0.15)
-        start = time.time()
+        if start is None:
+            time.sleep(0.15)
+            start = time.time()
         debug("start wait pos..")
         timeout = True
         while time.time() - start < Cutter.TIMEOUT:
@@ -170,7 +172,7 @@ class Cutter():
         time.sleep(0.05)
         if GPIO.input(Cutter.Pos) != Cutter.REPOS:
             print("===== Double !")
-            self._cut_full()
+            self._cut_half(start)
 
         if timeout:
             debug("WAIT POS TIMEOUT ! should be in wrong position")
@@ -180,7 +182,6 @@ class Cutter():
     def cut_half(self):
         with self._fsmcutter.lock:
             self._cut_half()
-
 
 
     def _wait_pos(self):
@@ -199,7 +200,7 @@ class Cutter():
         time.sleep(0.01)
         self._stop()
 
-    def repos(self,sens='auto'):
+    def __old_repos(self,sens='auto'):
         debug("start repos..")
         self.stop()
         if sens == 'L':
@@ -235,6 +236,13 @@ class Cutter():
         debug("Q+: stop")
         self._fsmcutter.queue.put(Cutter.STOP)
         #self._queue.join()
+
+    def _repos(self):
+        self._cut_half(time.time())
+
+    def repos(self):
+        with self._fsmcutter.lock:
+            self._repos()
 
     def quit(self):
         self._fsmcutter.queue.put(None)
