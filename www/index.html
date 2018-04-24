@@ -15,24 +15,6 @@
 <body>
   <div id="title">IMMOBILES - Tickets Printer</div>
   <div id="peers"></div>
-  <div id="files"></div>
-
-  <!-- UPLOAD -->
-  <form action="/printFile" method="POST" enctype="multipart/form-data" id="fileform">
-    <input type="hidden" id="print_relpath" name="relpath" value="">
-    <input type="hidden" id="print_cut" name="cut" value="1">
-    <input type="hidden" id="print_pause" name="pause" value="1">
-    <input type="hidden" id="print_nbr" name="nbr" value="1">
-    <div class="file-field input-field">
-      <div class="btn">
-        <span>Add</span>
-        <input type="file" name="upload" multiple id="filebtn">
-      </div>
-      <div class="file-path-wrapper">
-        <input class="file-path validate" type="text" id="filelist" placeholder="Upload one or more files">
-      </div>
-    </div>
-  </form>
 
   <!-- TEXT -->
   <form action="/printText" method="POST" enctype="multipart/form-data" id="textform">
@@ -56,6 +38,27 @@
   <div class="btn" id="stop">
     <span>Stop !</span>
   </div>
+
+
+  <div id="files"></div>
+
+  <!-- UPLOAD -->
+  <form action="/printFile" method="POST" enctype="multipart/form-data" id="fileform">
+    <input type="hidden" id="print_relpath" name="relpath" value="">
+    <input type="hidden" id="print_cut" name="cut" value="1">
+    <input type="hidden" id="print_pause" name="pause" value="1">
+    <input type="hidden" id="print_nbr" name="nbr" value="1">
+    <div class="file-field input-field">
+      <div class="btn">
+        <span>Add</span>
+        <input type="file" name="upload" multiple id="filebtn">
+      </div>
+      <div class="file-path-wrapper">
+        <input class="file-path validate" type="text" id="filelist" placeholder="Upload one or more files">
+      </div>
+    </div>
+  </form>
+
 
   <!-- Modal Structure -->
   <div id="modal1" class="modal">
