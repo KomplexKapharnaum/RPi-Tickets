@@ -109,9 +109,11 @@ function PeerMachine()
     // Get peers count
     this.peersCount = function() {
       if (!this.machine) return 0
-        var count = 0;
+        var count = 1;
         var clients = this.machine.getClients()
         for (var k in clients) {
+          console.log(k)
+
             if (clients.hasOwnProperty(k)) {
                ++count;
             }

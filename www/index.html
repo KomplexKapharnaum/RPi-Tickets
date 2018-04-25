@@ -64,11 +64,14 @@
     socket.on('connect', function(data) {
         console.log('Connected :)');
         socket.emit('getlist')
+	$("#files").empty()
     });
     socket.on('error', console.error.bind(console));
     socket.on('message', console.log.bind(console));
     socket.on('disconnect', function() {
         console.log('Disconnected :(');
+	$("#peers").empty()
+	$("#files").empty()
         $("#files").html('No connection to RPi-Tickets..')
     });
 
