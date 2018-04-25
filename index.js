@@ -26,9 +26,9 @@ printer.init({
 
 printer.isPrinterConnected( function(isConnected){
   console.log('Printer state', isConnected)
-  /*printer.println("Hello world");
+  printer.println("Hello world");
   printer.cut();
-  printer.execute(); */
+  printer.execute();
 })
 
 function compare(a,b) {
