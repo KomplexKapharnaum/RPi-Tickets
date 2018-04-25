@@ -39,7 +39,7 @@ function printPy(filepath, nbr, cut, pause) {
     if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath)
     return;
   }
-  const child = spawnSync(path.resolve(__dirname, 'py-print/print'), [filepath, (cut)?1:0]);
+  const child = spawn(path.resolve(__dirname, 'py-print/print'), [filepath, (cut)?1:0]);
   // console.log(child.stdout.toString());
   setTimeout(()=>printPy(filepath, nbr, cut, pause), pause)
 }
@@ -71,7 +71,7 @@ app.post('/printFile', function(req, res) {
 
     // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
     // let sampleFile = req.files.sampleFile;
-    res.sendFile(__dirname + '/www/index.html');
+    res.redirect('/');
 });
 
 io.on('connection', function(client) {
