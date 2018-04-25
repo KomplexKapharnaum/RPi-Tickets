@@ -112,8 +112,7 @@ function PeerMachine()
         var count = 1;
         var clients = this.machine.getClients()
         for (var k in clients) {
-          console.log(k)
-
+          // console.log(k)
             if (clients.hasOwnProperty(k)) {
                ++count;
             }
