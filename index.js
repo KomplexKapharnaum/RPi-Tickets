@@ -24,8 +24,13 @@ PeerMachine.start();
 printPy(path.resolve(__dirname, 'blank.png'), 1, true, 0)
 
 function print(job) {
-  fs.writeFileSync('/tmp/'+job.relpath, job.data);
-  printPy('/tmp/'+job.relpath, job.nbr, job.cut, job.pause)
+  var path
+  if (job.data) {
+    path = '/tmp/'+job.relpath
+    fs.writeFileSync(path, job.data);
+  }
+  else path = LISTPATH+job['relpath']
+  printPy(path, job.nbr, job.cut, job.pause)
 }
 
 function printPy(filepath, nbr, cut, pause) {
@@ -79,8 +84,8 @@ io.on('connection', function(client) {
 
     client.on('printUsb', function(job) {
       //print(data)
-      var filepath = LISTPATH+job['relpath']
-      job['data'] = fs.readFileSync(filepath)
+      // var filepath = LISTPATH+job['relpath']
+      // job['data'] = fs.readFileSync(filepath)
       PeerMachine.broadcast('doPrint', job)
     });
 
@@ -92,7 +97,7 @@ function countingPeers() {
 }
 setInterval(countingPeers, 3000);
 
-// LIST USB FILES 
+// LIST USB FILES
 function compare(a,b) {
   var aName = a.name.toLowerCase()
   var bName = b.name.toLowerCase()
