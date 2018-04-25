@@ -16,16 +16,19 @@
   <div id="title">IMMOBILES - Tickets Printer</div>
   <div id="peers"></div>
   <div id="files"></div>
-  
+
   <!-- UPLOAD -->
-  <form action="#">
+  <form action="/printFile" method="POST" enctype="multipart/form-data">
     <div class="file-field input-field">
       <div class="btn">
         <span>File</span>
-        <input type="file" multiple id="filebtn">
+        <input type="file" name="upload" multiple id="filebtn">
       </div>
       <div class="file-path-wrapper">
         <input class="file-path validate" type="text" id="filelist" placeholder="Upload one or more files">
+      </div>
+      <div class="btn" id="fileprint" onclick="$(this).parents('form:first').submit()">
+        <span>Print</span>
       </div>
     </div>
   </form>
@@ -77,14 +80,14 @@
     socket.on('connect', function(data) {
         console.log('Connected :)');
         socket.emit('getlist')
-	$("#files").empty()
-    });
-    socket.on('error', console.error.bind(console));
-    socket.on('message', console.log.bind(console));
-    socket.on('disconnect', function() {
-        console.log('Disconnected :(');
-	$("#peers").empty()
-	$("#files").empty()
+      	$("#files").empty()
+          });
+          socket.on('error', console.error.bind(console));
+          socket.on('message', console.log.bind(console));
+          socket.on('disconnect', function() {
+              console.log('Disconnected :(');
+      	$("#peers").empty()
+      	$("#files").empty()
         $("#files").html('No connection to RPi-Tickets..')
     });
 
@@ -170,7 +173,7 @@
           pause: $('#modal1').find('#print_pause').val(),
         }
         console.log(job)
-        socket.emit('print', job)
+        socket.emit('printUsb', job)
       })
 
     });

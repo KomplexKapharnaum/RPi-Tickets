@@ -9,9 +9,11 @@
   "author": "MGR37",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "bonjour": "^3.5.0",
     "callback-stream": "^1.1.0",
     "express": "^4.16.3",
+    "express-fileupload": "^0.4.0",
     "in_array": "^1.1.0",
     "node-thermal-printer": "^2.0.0",
     "nodemon": "^1.17.3",

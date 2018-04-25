@@ -1,11 +1,12 @@
 var express = require('express');
+var bodyParser = require("body-parser");
+var fileUpload = require('express-fileupload');
 var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 var fs = require('fs')
 var path = require('path')
 var in_array = require('in_array')
-var sharp = require('sharp');
 const { spawnSync} = require('child_process');
 
 var WEBPORT = 80
@@ -16,26 +17,82 @@ var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp', '.pdf']
 
 var PeerMachine = require('./kpi-peers/peermachine.js')();
 PeerMachine.on( 'logguer.log', (data, from)=>console.log('received', data, ' <- ',from) );
-PeerMachine.on('doPrint', (data)=>print(data))
+PeerMachine.on('doPrint', (job)=>print(job))
 PeerMachine.start();
 
 
-/*var printer = require("node-thermal-printer");
-printer.init({
-  type: 'epson',
-  // interface: '/dev/bus/usb/001/007'
-  interface: '/dev/usb/lp0'
-});
-
-printer.isPrinterConnected( function(isConnected){
-  console.log('Printer state', isConnected)
-  printer.println("Hello world");
-  printer.cut();
-  printer.execute();
-})*/
-
 printPy(path.resolve(__dirname, 'blank.png'), 1, true, 0)
 
+function print(job) {
+  fs.writeFileSync('/tmp/'+job.relpath, job.data);
+  printPy('/tmp/'+job.relpath, job.nbr, job.cut, job.pause)
+}
+
+function printPy(filepath, nbr, cut, pause) {
+  nbr -= 1
+  if (nbr < 0) {
+    if(fs.existsSync(filepath)) fs.unlink(filepath)
+    return;
+  }
+  const child = spawnSync(path.resolve(__dirname, 'py-print/print'), [filepath, (cut)?1:0]);
+  // console.log(child.stdout.toString());
+  setTimeout(()=>printPy(filepath, nbr, cut, pause), pause)
+}
+
+
+app.use(express.static(__dirname + '/www/'));
+//app.use(bodyParser.urlencoded({ extended: false }));
+//app.use(bodyParser.json());
+app.use(fileUpload());
+app.get('/', function(req, res,next) {
+    res.sendFile(__dirname + '/www/index.html');
+});
+app.post('/printFile', function(req, res) {
+    // console.log(req.files.upload)
+
+    if (req.files.upload) {
+      if (!Array.isArray(req.files.upload)) req.files.upload = [req.files.upload]
+      for (let file of req.files.upload) {
+        // console.log(file)
+
+        var job = {data: file.data, nbr: 1, cut:1, pause: 0, relpath: file.name}
+        PeerMachine.broadcast('doPrint', job)
+
+        // fs.writeFileSync('/tmp/'+file.name, file.data);
+        // printPy('/tmp/'+file.name, 1, 1, 1);
+        // fs.unlink('/tmp/'+file.name)
+      }
+    }
+
+    // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
+    // let sampleFile = req.files.sampleFile;
+    res.sendFile(__dirname + '/www/index.html');
+});
+
+io.on('connection', function(client) {
+    console.log('Client connected...');
+
+    client.on('getlist', function(data) {
+      var list = allFilesSync(LISTPATH)
+      client.emit('listNode', list)
+    });
+
+    client.on('printUsb', function(job) {
+      //print(data)
+      var filepath = LISTPATH+job['relpath']
+      job['data'] = fs.readFileSync(filepath)
+      PeerMachine.broadcast('doPrint', job)
+    });
+
+});
+
+function countingPeers() {
+  // console.log(PeerMachine.peersCount())
+  io.emit('peers', PeerMachine.peersCount())
+}
+setInterval(countingPeers, 3000);
+
+// LIST USB FILES 
 function compare(a,b) {
   var aName = a.name.toLowerCase()
   var bName = b.name.toLowerCase()
@@ -60,92 +117,5 @@ const allFilesSync = (dir, fileList = []) => {
   fileList.sort(compare)
   return fileList
 }
-
-function print(job) {
-  /*if (job['relpath'].endsWith('.png')) {
-    console.log("Direct Print image", job['relpath'])
-    printFile(job)
-  }
-  else {
-    var filepath = LISTPATH+job['relpath']
-    console.log("Resize and Print image", filepath)
-    sharp(filepath)
-    .resize(576)
-    .png()
-    .toBuffer()
-    .then( data => {
-      //printer.alignCenter()
-      printBuffer(job, data)
-    })
-    .catch( err => console.log('Resize failed', err) );
-  }*/
-  var filepath = LISTPATH+job['relpath']
-  printPy(filepath, job['nbr'], job['cut'], job['pause'])
-}
-
-function printPy(filepath, nbr, cut, pause) {
-  if (nbr < 1) return;
-
-  const child = spawnSync(path.resolve(__dirname, 'py-print/print'), [filepath, (cut)?1:0]);
-  nbr -= 1
-  setTimeout(()=>printPy(filepath, nbr, cut, pause), pause)
-}
-
-function printBuffer(job, buffer) {
-  if (job['nbr'] < 1) return;
-  printer.printImageBuffer(buffer, function(done){
-    if (job['cut']) printer.cut()
-    printer.execute((err) => {
-      if (err) console.error("Print failed", err);
-      else {
-        console.log("Print done")
-        job['nbr'] -= 1
-        setTimeout(()=>printBuffer(job, buffer), job['pause'])
-      }
-    });
-  })
-}
-
-function printFile(job) {
-  if (job['nbr'] < 1) return;
-  var filepath = LISTPATH+job['relpath']
-  printer.printImage(filepath, function(done){
-    if (job['cut']) printer.cut()
-    printer.execute((err) => {
-      if (err) console.error("Print failed", err);
-      else {
-        console.log("Print done")
-        job['nbr'] -= 1
-        setTimeout(()=>printFile(job), job['pause'])
-      }
-    })
-  })
-}
-
-app.use(express.static(__dirname + '/www/'));
-app.get('/', function(req, res,next) {
-    res.sendFile(__dirname + '/www/index.html');
-});
-
-io.on('connection', function(client) {
-    console.log('Client connected...');
-
-    client.on('getlist', function(data) {
-      var list = allFilesSync(LISTPATH)
-      client.emit('listNode', list)
-    });
-
-    client.on('print', function(data) {
-      //print(data)
-      PeerMachine.broadcast('doPrint', data)
-    });
-
-});
-
-function countingPeers() {
-  // console.log(PeerMachine.peersCount())
-  io.emit('peers', PeerMachine.peersCount())
-}
-setInterval(countingPeers, 3000);
 
 server.listen(WEBPORT);

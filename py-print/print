@@ -1,28 +1,41 @@
 #!/usr/bin/env python
 from escpos.printer import Usb
-import sys
+import sys, os
 from subprocess import call
+import glob
 
-call(['rm', "/tmp/print.jpg"])
-call(['cp', sys.argv[1], "/tmp/print.jpg"])
+files = glob.glob('/tmp/print*.jpg')
+for f in files:
+	os.remove(f)
+
+doConvert = False
 
 if sys.argv[1].endswith('.pdf'):
-	print 'converting PDF..'
-	call(['montage', '-resize', '576x', '-mode', 'concatenate', '-tile', '1', '-quality', '100', sys.argv[1], "/tmp/print.jpg"])
+	doConvert = True
 else:
-	#from PIL import Image
-	#im = Image.open(sys.argv[1])
-	#width, height = im.size
-	#if width < 576:
-	print 'resizing..'
-	call(["convert", sys.argv[1], "-resize", "576x", "/tmp/print.jpg"])
-	
-sys.exit(0)
+	call(['cp', sys.argv[1], "/tmp/print.jpg"])   # Copy image in case convert fails
+	# from PIL import Image
+	# im = Image.open(sys.argv[1])
+	# width, height = im.size
+	# if width < 576:
+	doConvert = True
+
+if doConvert:
+	call(["convert", sys.argv[1], "-resize", "300x", "/tmp/print.jpg"])
+
 p = Usb(0x04b8,0x0e15,0)
-p.set(density=2)
-p.image("/tmp/print.jpg")
-if sys.argv[2] == '1':
-    p.cut()
+files = glob.glob('/tmp/print*.jpg')
+print files
+for f in files:
+	p.image(f, high_density_vertical=False, high_density_horizontal=False)
+	if len(sys.argv) > 2 and sys.argv[2] == '1':
+		p.cut()
+
+# CUT AT THE END IF NO CUT INBETWEEN
+if len(sys.argv) > 3 and sys.argv[2] != '1':
+	p.cut()
+
+
 sys.exit(0)
 
 # sudo apt install python-pip libjpeg8-dev imagemagick
