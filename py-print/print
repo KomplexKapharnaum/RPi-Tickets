@@ -21,13 +21,13 @@ else:
 	doConvert = True
 
 if doConvert:
-	call(["convert", sys.argv[1], "-resize", "300x", "/tmp/print.jpg"])
+	call(["convert", sys.argv[1], "-resize", "576x", "/tmp/print.jpg"])
 
 p = Usb(0x04b8,0x0e15,0)
 files = glob.glob('/tmp/print*.jpg')
 print files
 for f in files:
-	p.image(f, high_density_vertical=False, high_density_horizontal=False)
+	p.image(f)
 	if len(sys.argv) > 2 and sys.argv[2] == '1':
 		p.cut()
 
