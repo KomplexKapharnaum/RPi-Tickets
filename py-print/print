@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+from escpos.printer import Usb
+import sys
+from subprocess import call
+
+call(['rm', "/tmp/print.png"])
+call(['cp', sys.argv[1], "/tmp/print.png"])
+call(["convert", sys.argv[1], "-resize", "576x", "/tmp/print.png"])
+
+p = Usb(0x04b8,0x0e15,0)
+p.image("/tmp/print.png")
+if sys.argv[2] == '1':
+    p.cut()
+sys.exit(0)
+
+# sudo apt install python-pip libjpeg8-dev imagemagick
+# pip install python-escpos

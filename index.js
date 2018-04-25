@@ -6,6 +6,7 @@ var fs = require('fs')
 var path = require('path')
 var in_array = require('in_array')
 var sharp = require('sharp');
+const { spawnSync} = require('child_process');
 
 var WEBPORT = 80
 
@@ -19,7 +20,7 @@ PeerMachine.on('doPrint', (data)=>print(data))
 PeerMachine.start();
 
 
-var printer = require("node-thermal-printer");
+/*var printer = require("node-thermal-printer");
 printer.init({
   type: 'epson',
   // interface: '/dev/bus/usb/001/007'
@@ -31,7 +32,9 @@ printer.isPrinterConnected( function(isConnected){
   printer.println("Hello world");
   printer.cut();
   printer.execute();
-})
+})*/
+
+printPy('blank.png', 1, true, 0)
 
 function compare(a,b) {
   var aName = a.name.toLowerCase()
@@ -59,28 +62,64 @@ const allFilesSync = (dir, fileList = []) => {
 }
 
 function print(job) {
-  var filepath = LISTPATH+job['relpath']
-  console.log("Resize and Print image", filepath)
-  if (job['nbr'] < 1) return;
-  sharp(filepath)
+  /*if (job['relpath'].endsWith('.png')) {
+    console.log("Direct Print image", job['relpath'])
+    printFile(job)
+  }
+  else {
+    var filepath = LISTPATH+job['relpath']
+    console.log("Resize and Print image", filepath)
+    sharp(filepath)
     .resize(576)
     .png()
     .toBuffer()
     .then( data => {
       //printer.alignCenter()
-      printer.printImageBuffer(data, function(done){
-        if (job['cut']) printer.cut()
-        printer.execute((err) => {
-          if (err) console.error("Print failed", err);
-          else {
-            console.log("Print done");
-            job['nbr'] -= 1
-            setTimeout(()=>print(job), job['pause'])
-          }
-        });
-      })
+      printBuffer(job, data)
     })
-    .catch( err => console.log('Resize failed') );
+    .catch( err => console.log('Resize failed', err) );
+  }*/
+  var filepath = LISTPATH+job['relpath']
+  printPy(filepath, job['nbr'], job['cut'], job['pause'])
+}
+
+function printPy(filepath, nbr, cut, pause) {
+  if (nbr < 1) return;
+
+  const child = spawnSync('./py-print/print', [filepath, (cut)?1:0]);
+  nbr -= 1
+  setTimeout(()=>printPy(filepath, nbr, cut, pause), pause)
+}
+
+function printBuffer(job, buffer) {
+  if (job['nbr'] < 1) return;
+  printer.printImageBuffer(buffer, function(done){
+    if (job['cut']) printer.cut()
+    printer.execute((err) => {
+      if (err) console.error("Print failed", err);
+      else {
+        console.log("Print done")
+        job['nbr'] -= 1
+        setTimeout(()=>printBuffer(job, buffer), job['pause'])
+      }
+    });
+  })
+}
+
+function printFile(job) {
+  if (job['nbr'] < 1) return;
+  var filepath = LISTPATH+job['relpath']
+  printer.printImage(filepath, function(done){
+    if (job['cut']) printer.cut()
+    printer.execute((err) => {
+      if (err) console.error("Print failed", err);
+      else {
+        console.log("Print done")
+        job['nbr'] -= 1
+        setTimeout(()=>printFile(job), job['pause'])
+      }
+    })
+  })
 }
 
 app.use(express.static(__dirname + '/www/'));
