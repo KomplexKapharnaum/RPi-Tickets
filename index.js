@@ -36,7 +36,7 @@ function print(job) {
 function printPy(filepath, nbr, cut, pause) {
   nbr -= 1
   if (nbr < 0) {
-    if(fs.existsSync(filepath)) fs.unlink(filepath)
+    if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath)
     return;
   }
   const child = spawnSync(path.resolve(__dirname, 'py-print/print'), [filepath, (cut)?1:0]);
