@@ -7,6 +7,8 @@ var path = require('path')
 var in_array = require('in_array')
 var sharp = require('sharp');
 
+var WEBPORT = 80
+
 var LISTPATH = '/media/usb'
 //var LISTPATH = '/home/mgr/Pictures'
 var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp']
@@ -49,7 +51,7 @@ const allFilesSync = (dir, fileList = []) => {
       entry['children'] = allFilesSync(filePath)
       if (entry['children'].length > 0) fileList.push(entry)
     }
-    else if (in_array(path.extname(file).toLowerCase(), EXTENSION)) fileList.push(entry)
+    else if (in_array(path.extname(file).toLowerCase(), EXTENSION) && file[0] != '.') fileList.push(entry)
 
   })
   fileList.sort(compare)
@@ -107,4 +109,4 @@ function countingPeers() {
 }
 setInterval(countingPeers, 3000);
 
-server.listen(4200);
+server.listen(WEBPORT);
