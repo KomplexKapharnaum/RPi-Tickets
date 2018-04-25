@@ -7,7 +7,7 @@ var io = require('socket.io')(server);
 var fs = require('fs')
 var path = require('path')
 var in_array = require('in_array')
-const {spawnSync, spawn} = require('child_process');
+const { spawnSync, exec} = require('child_process');
 
 var WEBPORT = 80
 
@@ -17,61 +17,111 @@ var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp', '.pdf']
 
 var PeerMachine = require('./kpi-peers/peermachine.js')();
 PeerMachine.on( 'logguer.log', (data, from)=>console.log('received', data, ' <- ',from) );
-PeerMachine.on('doPrint', (job)=>print(job))
+PeerMachine.on('doPrint', (job)=>{
+
+  for (var k=0; k<job.nbr; k++)
+    for (var file of job.files) {
+      worker.enqueue( new Task(file.relpath, job.cut, file.data, job.pause) )
+    }
+
+})
 PeerMachine.start();
 
-
-printPy(path.resolve(__dirname, 'blank.png'), 1, true, 0)
-
-function print(job) {
-  var path
-  if (job.data) {
-    path = '/tmp/'+job.relpath
-    fs.writeFileSync(path, job.data);
+class Task {
+  constructor(path, cut, data, wait) {
+    this.path = JSON.parse(JSON.stringify(path))
+    this.cut = cut
+    this.data = data
+    this.wait = wait
   }
-  else path = LISTPATH+job['relpath']
-  printPy(path, job.nbr, job.cut, job.pause)
+  execute(work) {
+    // console.log('/'+this.path)
+    print(this.path, this.cut, this.data, ()=>{
+      setTimeout(()=>{work.next()}, this.wait)
+    })
+  }
 }
 
-function printPy(filepath, nbr, cut, pause) {
-  nbr -= 1
-  if (nbr < 0) {
+class Worker {
+  constructor() {
+    var that = this
+    this.tasks = []
+    this.running = false
+  }
+  next() {
+    if (this.tasks.length > 0) this.tasks.pop().execute(this)
+    else this.running = false
+  }
+  enqueue(newtask) {
+    this.tasks.unshift(newtask)
+    if (!this.running) {
+      this.running = true
+      this.next()
+    }
+  }
+}
+
+var worker = new Worker()
+
+print('blank.png', 1, fs.readFileSync(path.resolve(__dirname, 'blank.png')))
+
+function print(relpath, cut, buffer, onEnd) {
+  console.log('-'+relpath)
+  var filepath
+  if (buffer) {
+    filepath = '/tmp/'+relpath
+    fs.writeFileSync(filepath, buffer);
+  }
+  else filepath = LISTPATH+relpath
+
+  var cmd = path.resolve(__dirname, 'py-print/print')+" "+filepath+" "+((cut)?"1":"0")
+  console.log(cmd)
+  exec(cmd, (err, stdout, stderr) => {
     if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath)
-    return;
-  }
-  const child = spawn(path.resolve(__dirname, 'py-print/print'), [filepath, (cut)?1:0]);
-  // console.log(child.stdout.toString());
-  setTimeout(()=>printPy(filepath, nbr, cut, pause), pause)
+    if (err) {
+      console.error(`exec error: ${err}`);
+      return;
+    }
+    if (onEnd) onEnd()
+  });
 }
+
 
 
 app.use(express.static(__dirname + '/www/'));
-//app.use(bodyParser.urlencoded({ extended: false }));
-//app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 app.use(fileUpload());
 app.get('/', function(req, res,next) {
     res.sendFile(__dirname + '/www/index.html');
 });
 app.post('/printFile', function(req, res) {
     // console.log(req.files.upload)
+    var job = {
+      files: [],
+      cut: req.body.cut,
+      nbr: req.body.nbr,
+      pause: req.body.pause,
+    }
+
+    for (var p of req.body.relpath.split(',')) {
+      job.files.push({relpath:p, data:null})
+      console.log(p)
+    }
 
     if (req.files.upload) {
       if (!Array.isArray(req.files.upload)) req.files.upload = [req.files.upload]
       for (let file of req.files.upload) {
-        // console.log(file)
-
-        var job = {data: file.data, nbr: 1, cut:1, pause: 0, relpath: file.name}
-        PeerMachine.broadcast('doPrint', job)
-
-        // fs.writeFileSync('/tmp/'+file.name, file.data);
-        // printPy('/tmp/'+file.name, 1, 1, 1);
-        // fs.unlink('/tmp/'+file.name)
+        job.files.push({relpath:file.name, data:file.data})
       }
     }
 
+    PeerMachine.broadcast('doPrint', job)
     // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
     // let sampleFile = req.files.sampleFile;
     res.redirect('/');
+    // res.sendFile(__dirname + '/www/index.html');
+
 });
 
 io.on('connection', function(client) {
@@ -86,7 +136,7 @@ io.on('connection', function(client) {
       //print(data)
       // var filepath = LISTPATH+job['relpath']
       // job['data'] = fs.readFileSync(filepath)
-      PeerMachine.broadcast('doPrint', job)
+      //PeerMachine.broadcast('doPrint', job)
     });
 
 });

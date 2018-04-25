@@ -18,20 +18,25 @@
   <div id="files"></div>
 
   <!-- UPLOAD -->
-  <form action="/printFile" method="POST" enctype="multipart/form-data">
+  <form action="/printFile" method="POST" enctype="multipart/form-data" id="fileform">
+    <input type="hidden" id="print_relpath" name="relpath" value="">
+    <input type="hidden" id="print_cut" name="cut" value="1">
+    <input type="hidden" id="print_pause" name="pause" value="1">
+    <input type="hidden" id="print_nbr" name="nbr" value="1">
     <div class="file-field input-field">
       <div class="btn">
-        <span>File</span>
+        <span>Add</span>
         <input type="file" name="upload" multiple id="filebtn">
       </div>
       <div class="file-path-wrapper">
         <input class="file-path validate" type="text" id="filelist" placeholder="Upload one or more files">
       </div>
-      <div class="btn" id="fileprint" onclick="$(this).parents('form:first').submit()">
-        <span>Print</span>
-      </div>
     </div>
   </form>
+
+  <div class="btn" id="fileprint">
+    <span>Print</span>
+  </div>
 
   <!-- Modal Structure -->
   <div id="modal1" class="modal">
@@ -40,25 +45,23 @@
       <div id="print_name"></div>
       <br />
       <form action="#">
-        <input type="hidden" id="print_path" value="">
-        <input type="hidden" id="print_relpath" value="">
         <!-- Switch -->
         Cut:
         <div class="switch">
-          <label><input type="checkbox" id="print_cut" checked>
+          <label><input type="checkbox" id="cut" checked>
             <span class="lever"></span>
           </label>
         </div>
         <br />
         <!-- NBR -->
         <p class="range-field">
-          Quantity: <span id="print_q">1</span>
-          <input type="range" id="print_nbr" min="1" max="50" value="1" />
+          Quantity: <span id="nbr_i">1</span>
+          <input type="range" id="nbr" min="1" max="100" value="1" />
         </p>
         <!-- PAUSE -->
         <p class="range-field">
-          Pause between: <span id="print_p">3000</span> ms
-          <input type="range" id="print_pause" min="200" max="4000" value="3000" />
+          Pause between: <span id="pause_i">1</span> ms
+          <input type="range" id="pause" min="1" max="4000" value="1" />
         </p>
       </form>
     </div>
@@ -130,50 +133,60 @@
         else {
           var li = $('<li>').appendTo(ul)
           var hd = $('<div class="collapsible-header">')
-                        .append('<i class="material-icons">image</i>')
+                        // .append('<i class="material-icons">image</i>')
+                        .append('<label><input class="filebox" type="checkbox" value="'+el.relpath+'" /><span></span></label>')
                         .append(el.name).appendTo(li)
-          hd.on('click', promptPrint.bind(null,el) )
           li.addClass('file')
         }
       }
     }
 
-    function promptPrint(el) {
-      console.log(el)
-      $('#modal1').find('#print_name').html(el.name)
-      $('#modal1').find('#print_path').val(el.path)
-      $('#modal1').find('#print_relpath').val(el.relpath)
-      $('#modal1').modal('open')
-    }
 
     $(document).ready(function(){
       $('.modal').modal()
 
-      $('#print_nbr').on('change', ()=>{
-        $('#print_q').html($('#modal1').find('#print_nbr').val())
+      $('#nbr').on('change', ()=>{
+        $('#nbr_i').html($('#modal1').find('#nbr').val())
+        $('#print_nbr').val($('#modal1').find('#nbr').val())
       })
-      $('#print_nbr').on('input', ()=>{
-        $('#print_q').html($('#modal1').find('#print_nbr').val())
+      $('#nbr').on('input', ()=>{
+        $('#nbr_i').html($('#modal1').find('#nbr').val())
+        $('#print_nbr').val($('#modal1').find('#nbr').val())
       })
 
-      $('#print_pause').on('change', ()=>{
-        $('#print_p').html($('#modal1').find('#print_pause').val())
+      $('#pause').on('change', ()=>{
+        $('#pause_i').html($('#modal1').find('#pause').val())
+        $('#print_pause').val($('#modal1').find('#pause').val())
       })
-      $('#print_pause').on('input', ()=>{
-        $('#print_p').html($('#modal1').find('#print_pause').val())
+      $('#pause').on('input', ()=>{
+        $('#pause_i').html($('#modal1').find('#pause').val())
+        $('#print_pause').val($('#modal1').find('#pause').val())
+      })
+
+      $('#fileprint').on('click', ()=>{
+        var selectedFiles = []
+        $('.filebox:checkbox:checked').each((i, el)=>{
+          // console.log($(el).val())
+          selectedFiles.push($(el).val())
+
+        })
+        console.log(selectedFiles)
+        $('#print_relpath').val(selectedFiles.join(','))
+        $('#modal1').modal('open')
       })
 
       $('#doPrint').on('click', ()=> {
-        var job = {
+        /*var job = {
+          files: [],
           cut: $('#modal1').find('#print_cut').prop('checked'),
-          path: $('#modal1').find('#print_path').val(),
-          relpath: $('#modal1').find('#print_relpath').val(),
-          name: $('#modal1').find('#print_name').val(),
           nbr: $('#modal1').find('#print_nbr').val(),
           pause: $('#modal1').find('#print_pause').val(),
         }
+        job.files.push({relpath:$('#modal1').find('#print_relpath').val(), data:null})
         console.log(job)
-        socket.emit('printUsb', job)
+        socket.emit('printUsb', job)*/
+        console.log($('#print_relpath').val())
+        $('#fileform').submit()
       })
 
     });

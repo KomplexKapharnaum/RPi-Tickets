@@ -26,6 +26,10 @@ MATERIALIZE ICON
 
 /**/
 
+body {
+  text-align: center;
+}
+
 #files ul {
   margin: 10px 0px;
 }
