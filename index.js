@@ -7,7 +7,7 @@ var io = require('socket.io')(server);
 var fs = require('fs')
 var path = require('path')
 var in_array = require('in_array')
-const { spawnSync} = require('child_process');
+const {spawnSync, spawn} = require('child_process');
 
 var WEBPORT = 80
 
