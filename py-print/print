@@ -39,4 +39,4 @@ if len(sys.argv) > 3 and sys.argv[2] != '1':
 sys.exit(0)
 
 # sudo apt install python-pip libjpeg8-dev imagemagick
-# pip install python-escpos
+# sudo pip install python-escpos
