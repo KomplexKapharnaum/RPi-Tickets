@@ -34,7 +34,7 @@ printer.isPrinterConnected( function(isConnected){
   printer.execute();
 })*/
 
-printPy('blank.png', 1, true, 0)
+printPy(path.resolve(__dirname, 'blank.png'), 1, true, 0)
 
 function compare(a,b) {
   var aName = a.name.toLowerCase()
@@ -86,7 +86,7 @@ function print(job) {
 function printPy(filepath, nbr, cut, pause) {
   if (nbr < 1) return;
 
-  const child = spawnSync('./py-print/print', [filepath, (cut)?1:0]);
+  const child = spawnSync(path.resolve(__dirname, 'py-print/print'), [filepath, (cut)?1:0]);
   nbr -= 1
   setTimeout(()=>printPy(filepath, nbr, cut, pause), pause)
 }
