@@ -18,7 +18,7 @@ var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp', '.pdf']
 var PeerMachine = require('./kpi-peers/peermachine.js')();
 PeerMachine.on( 'logguer.log', (data, from)=>console.log('received', data, ' <- ',from) );
 PeerMachine.on('doPrint', (job)=>{
-
+  // console.log('JOB received via KPi-ppers: ', job)
   for (var k=0; k<job.nbr; k++)
     for (var file of job.files) {
       worker.enqueue( new Task(file.relpath, job.cut, file.data, job.pause) )
@@ -74,7 +74,7 @@ function print(relpath, cut, buffer, onEnd) {
   }
   else filepath = LISTPATH+relpath
 
-  var cmd = path.resolve(__dirname, 'py-print/print')+" "+filepath+" "+((cut)?"1":"0")
+  var cmd = path.resolve(__dirname, 'py-print/print')+" "+filepath+" "+((cut=='1')?"1":"0")
   console.log(cmd)
   exec(cmd, (err, stdout, stderr) => {
     if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath)
@@ -96,7 +96,7 @@ app.get('/', function(req, res,next) {
     res.sendFile(__dirname + '/www/index.html');
 });
 app.post('/printFile', function(req, res) {
-    // console.log(req.files.upload)
+     console.log(req.body)
     var job = {
       files: [],
       cut: req.body.cut,

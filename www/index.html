@@ -56,7 +56,7 @@
         <!-- NBR -->
         <p class="range-field">
           Quantity: <span id="nbr_i">1</span>
-          <input type="range" id="nbr" min="1" max="100" value="1" />
+          <input type="range" id="nbr" min="1" max="30" value="1" />
         </p>
         <!-- PAUSE -->
         <p class="range-field">
@@ -161,6 +161,12 @@
       $('#pause').on('input', ()=>{
         $('#pause_i').html($('#modal1').find('#pause').val())
         $('#print_pause').val($('#modal1').find('#pause').val())
+      })
+
+      $('#cut').on('change', ()=>{
+        if ($('#cut').prop('checked')) $('#print_cut').val(1)
+        else $('#print_cut').val(0)
+        console.log('cut', $('#print_cut').val())
       })
 
       $('#fileprint').on('click', ()=>{
