@@ -3,12 +3,24 @@ from escpos.printer import Usb
 import sys
 from subprocess import call
 
-call(['rm', "/tmp/print.png"])
-call(['cp', sys.argv[1], "/tmp/print.png"])
-call(["convert", sys.argv[1], "-resize", "576x", "/tmp/print.png"])
+call(['rm', "/tmp/print.jpg"])
+call(['cp', sys.argv[1], "/tmp/print.jpg"])
 
+if sys.argv[1].endswith('.pdf'):
+	print 'converting PDF..'
+	call(['montage', '-resize', '576x', '-mode', 'concatenate', '-tile', '1', '-quality', '100', sys.argv[1], "/tmp/print.jpg"])
+else:
+	#from PIL import Image
+	#im = Image.open(sys.argv[1])
+	#width, height = im.size
+	#if width < 576:
+	print 'resizing..'
+	call(["convert", sys.argv[1], "-resize", "576x", "/tmp/print.jpg"])
+	
+sys.exit(0)
 p = Usb(0x04b8,0x0e15,0)
-p.image("/tmp/print.png")
+p.set(density=2)
+p.image("/tmp/print.jpg")
 if sys.argv[2] == '1':
     p.cut()
 sys.exit(0)

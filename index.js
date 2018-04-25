@@ -12,7 +12,7 @@ var WEBPORT = 80
 
 var LISTPATH = '/media/usb'
 //var LISTPATH = '/home/mgr/Pictures'
-var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp']
+var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp', '.pdf']
 
 var PeerMachine = require('./kpi-peers/peermachine.js')();
 PeerMachine.on( 'logguer.log', (data, from)=>console.log('received', data, ' <- ',from) );
