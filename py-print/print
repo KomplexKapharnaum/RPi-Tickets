@@ -1,4 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+
+# https://python-escpos.readthedocs.io/en/latest/user/raspi.html
+# imagemagick
+
 from escpos.printer import Usb
 import sys, os
 from subprocess import call

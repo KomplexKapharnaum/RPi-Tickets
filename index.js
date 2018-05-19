@@ -11,7 +11,7 @@ const { spawnSync, exec} = require('child_process');
 
 var WEBPORT = 80
 
-var LISTPATH = '/media/usb'
+var LISTPATH = '/mnt/usb'
 //var LISTPATH = '/home/mgr/Pictures'
 var EXTENSION = ['.jpg', '.jpeg', '.png', '.bmp', '.pdf']
 
@@ -77,7 +77,7 @@ function print(relpath, cut, buffer, onEnd) {
   var cmd = path.resolve(__dirname, 'py-print/print')+" "+filepath+" "+((cut=='1')?"1":"0")
   console.log(cmd)
   exec(cmd, (err, stdout, stderr) => {
-    if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath)
+    if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath, ()=>{})
     if (err) {
       console.error(`exec error: ${err}`);
       return;
