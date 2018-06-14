@@ -15,8 +15,26 @@
 <body>
   <div id="title">IMMOBILES - Tickets Printer</div>
   <div id="peers"></div>
-  <div id="files"></div>
 
+  <div class="btn" id="salve">
+    <span>Envoyer une salve</span>
+  </div>
+
+  <!-- TEXT -->
+  <form action="/printText" method="POST" enctype="multipart/form-data" id="textform">
+    <input type="hidden" id="print_cut_t" name="cut" value="1">
+    <input type="hidden" id="print_pause_t" name="pause" value="1">
+    <input type="hidden" id="print_nbr_t" name="nbr" value="1">
+    <div class="file-field input-field">
+      <div class="btn">
+        <span>TEXT</span>
+        <!--<input type="none"  name="text" multiple id="txtbtn">-->
+      </div>
+      <div class="file-path-wrapper">
+        <input class="file-path validate" type="text" name="txt" id="txt" placeholder="Write text to print">
+      </div>
+   </div>
+  </form>
   <!-- UPLOAD -->
   <form action="/printFile" method="POST" enctype="multipart/form-data" id="fileform">
     <input type="hidden" id="print_relpath" name="relpath" value="">
@@ -34,9 +52,20 @@
     </div>
   </form>
 
+
+
   <div class="btn" id="fileprint">
     <span>Print</span>
   </div>
+  <div class="btn" id="stop">
+    <span>Stop !</span>
+  </div>
+
+
+
+  <div id="files"></div>
+
+
 
   <!-- Modal Structure -->
   <div id="modal1" class="modal">
@@ -95,7 +124,11 @@
     });
 
     socket.on('peers', (n)=>{
-      $("#peers").html(n+' printers connected')
+      if(n == "-1"){
+      	$("#peers").html('Standalone mode - No printers connected')
+      }else{
+	$("#peers").html(n+' printers connected')
+      }
     })
 
     socket.on('listNode', (data) => {
@@ -148,26 +181,41 @@
       $('#nbr').on('change', ()=>{
         $('#nbr_i').html($('#modal1').find('#nbr').val())
         $('#print_nbr').val($('#modal1').find('#nbr').val())
+        $('#print_nbr_t').val($('#modal1').find('#nbr').val())
       })
       $('#nbr').on('input', ()=>{
         $('#nbr_i').html($('#modal1').find('#nbr').val())
         $('#print_nbr').val($('#modal1').find('#nbr').val())
+        $('#print_nbr_t').val($('#modal1').find('#nbr').val())
       })
 
       $('#pause').on('change', ()=>{
         $('#pause_i').html($('#modal1').find('#pause').val())
         $('#print_pause').val($('#modal1').find('#pause').val())
+        $('#print_pause_t').val($('#modal1').find('#pause').val())
       })
       $('#pause').on('input', ()=>{
         $('#pause_i').html($('#modal1').find('#pause').val())
         $('#print_pause').val($('#modal1').find('#pause').val())
+        $('#print_pause_t').val($('#modal1').find('#pause').val())
       })
 
       $('#cut').on('change', ()=>{
         if ($('#cut').prop('checked')) $('#print_cut').val(1)
         else $('#print_cut').val(0)
+        if ($('#cut').prop('checked')) $('#print_cut_t').val(1)
+        else $('#print_cut_t').val(0)
         console.log('cut', $('#print_cut').val())
       })
+
+      $('#stop').on('click', ()=>{
+        window.location.replace("/stop");
+      })
+
+      $('#salve').on('click', ()=>{
+        window.location.replace("/salve");
+      })
+
 
       $('#fileprint').on('click', ()=>{
         var selectedFiles = []
@@ -185,14 +233,21 @@
         /*var job = {
           files: [],
           cut: $('#modal1').find('#print_cut').prop('checked'),
+          cut: $('#modal1').find('#print_cut_t').prop('checked'),
           nbr: $('#modal1').find('#print_nbr').val(),
+          nbr: $('#modal1').find('#print_nbr_t').val(),
           pause: $('#modal1').find('#print_pause').val(),
+          pause: $('#modal1').find('#print_pause_t').val(),
         }
         job.files.push({relpath:$('#modal1').find('#print_relpath').val(), data:null})
         console.log(job)
         socket.emit('printUsb', job)*/
         console.log($('#print_relpath').val())
-        $('#fileform').submit()
+	if ( $('#txt').val() == "" ){
+	        $('#fileform').submit()
+	}else{
+		$('#textform').submit()
+	}
       })
 
     });
