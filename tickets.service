@@ -1,0 +1,11 @@
+[Unit]
+Description=Tickets printer
+           
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /root/RPi-Tickets/index.js
+ExecStop=/bin/fuser -k 80/tcp
+Restart=always
+           
+[Install]
+WantedBy=default.target
