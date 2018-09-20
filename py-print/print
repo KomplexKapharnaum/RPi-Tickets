@@ -3,7 +3,7 @@
 # https://python-escpos.readthedocs.io/en/latest/user/raspi.html
 # imagemagick
 
-from escpos.printer import Usb
+from .kxkm_printer import KXKMPrinter
 import sys, os
 from subprocess import call
 import glob
@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("print", type=str)
 parser.add_argument("-t","--text", action="store_true")
 parser.add_argument("-c","--cut", action="store_true")
+parser.add_argument("-h","--half_cut", action="store_true")
 args = parser.parse_args()
 
 from PIL import Image, ImageDraw, ImageFont
@@ -73,12 +74,17 @@ else:
 	files = [generate_trame(args.print), ]
 	
 
-p = Usb(0x04b8,0x0e15,0)
+p = KXKMPrinter(0x04b8,0x0e15,0)
 print("{}".format(files))
 for f in files:
 	p.image(f)
-	if len(sys.argv) > 2 and args.cut:
-		p.cut()
+	if len(sys.argv) > 2:
+		if args.cut:
+			p.cut(mode='FULL')
+		elif args.half_cut:
+			p.cut(mode='PART')
+
+
 
 # CUT AT THE END IF NO CUT INBETWEEN
 #if len(sys.argv) > 3 and not args['cut']:
