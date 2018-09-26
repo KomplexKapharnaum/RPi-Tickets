@@ -11,6 +11,7 @@ const { spawnSync, exec} = require('child_process');
 
 var WEBPORT = 80
 var ALONE = true	// Set if the printer should act ALONE or not (with PeerMachine)
+var OLD = false
 
 var LISTPATH = '/mnt/usb'
 //var LISTPATH = '/home/mgr/Pictures'
@@ -104,7 +105,7 @@ function print(relpath, cut, buffer, onEnd, text) {
 	filepath = LISTPATH+relpath
   }
 
-  var cmd = path.resolve(__dirname, 'py-print/print')+" "+((text == true)?"-t ":"")+"\""+filepath+"\" "+((cut == 'cut' || cut == '1')?"-c":"")+((cut == 'fullcut')?"-f":"")
+  var cmd = path.resolve(__dirname, 'py-print/print')+" "+((text == true)?"-t ":"")+"\""+filepath+"\" "+((cut == 'cut' || cut == '1')?"-c ":"")+((cut == 'fullcut')?"-f ":"")+((OLD == true)?"-o ":"")
   console.log(cmd)
   exec(cmd, (err, stdout, stderr) => {
     if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath, ()=>{})

@@ -14,7 +14,10 @@ class KXKMPrinter(Usb):
         if mode == 'rpi':
             self.cut = self._cut_rpi
         else:
-            self.cut = Usb.cut
+            self.cut = self._cut_old
+
+    def _cut_old(self, mode='FULL', feed=True):
+        Usb.cut(self)  
 
     def _cut_rpi(self, mode='PART', feed=True):
         """ Cut paper.
