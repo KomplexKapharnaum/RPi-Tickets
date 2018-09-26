@@ -119,7 +119,7 @@ class Cutter():
         self._fsmcutter = FSMCutter()
         self.half_time = Cutter.HALF_TIME if half_time is None else half_time
         self.full_time = Cutter.FULL_TIME if full_time is None else full_time
-        self._cut_full()
+#        self._cut_full()
         self._fsmcutter.queue.put(Cutter.STOP)
 
     def _cut_full(self):
@@ -145,9 +145,40 @@ class Cutter():
             debug("WAIT POS TIMEOUT ! should be in wrong position")
             self._fsmcutter.queue.put(Cutter.STOP)
         # self._fsmcutter.queue.put(Cutter.WAIT_POS)
+
     def cut_full(self):
         with self._fsmcutter.lock:
             self._cut_full()
+
+    def _cut_half(self):
+        self._fsmcutter.queue.put(Cutter.R)
+        time.sleep(self.half_time)
+        self._fsmcutter.queue.put(Cutter.L)
+        time.sleep(0.15)
+        start = time.time()
+        debug("start wait pos..")
+        timeout = True
+        while time.time() - start < Cutter.TIMEOUT:
+            pos = GPIO.input(Cutter.Pos)
+            print(str(pos))
+            if Cutter.REPOS == pos:
+                debug("--break")
+                self._fsmcutter.queue.put(Cutter.STOP)
+                timeout = False
+                break
+        time.sleep(0.05)
+        if GPIO.input(Cutter.Pos) != Cutter.REPOS:
+            print("===== Double !")
+            self._cut_full()
+
+        if timeout:
+            debug("WAIT POS TIMEOUT ! should be in wrong position")
+            self._fsmcutter.queue.put(Cutter.STOP)
+        # self._fsmcutter.queue.put(Cutter.WAIT_POS)
+
+    def cut_half(self):
+        with self._fsmcutter.lock:
+            self._cut_half()
 
 
 
@@ -220,14 +251,9 @@ class Cutter():
             debug("Mise en position")
             #self.repos()
             if mode == CUT_FULL:
-                self._cut_full()
+                self.cut_full()
             elif mode == CUT_HALF:
-                debug("Cut Partial")
-                self.turn(Cutter.R)
-                time.sleep(self.half_time)
-                debug("Go back")
-                #self.turn(Cutter.L)
-                self.repos('L')
+                self.cut_half()
             debug("End Cut")
         except Exception as e:
             self.stop()
