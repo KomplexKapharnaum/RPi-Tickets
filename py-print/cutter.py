@@ -14,44 +14,24 @@ def debug(txt):
 CUT_FULL = 0
 CUT_HALF = 1
 
-
-class Cutter(threading.Thread):
-    DEBUG = False
-
-    R = 5
-    L = 7
-    Pos = 3
-    STOP = 0
-    WAIT_POS = 1
-
-    REPOS = 1
-    ON = GPIO.HIGH
-    OFF = GPIO.LOW
-
-    HALF_TIME = 0.17
-    FULL_TIME = 0.25
-    TIMEOUT = 1 # sec
-
-    def __init__(self, half_time=None, full_time=None, *args, **kwargs):
-        threading.Thread.__init__(self, *args, **kwargs)
+class FSMCutter(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(Cutter.Pos, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(Cutter.L, GPIO.OUT)
         GPIO.setup(Cutter.R, GPIO.OUT)
-        self._queue = queue.Queue(maxsize=1)
-        self.half_time = Cutter.HALF_TIME if half_time is None else half_time
-        self.full_time = Cutter.FULL_TIME if full_time is None else full_time
+        self.queue = queue.Queue(maxsize=1)
+        self.lock = threading.Lock()
         self._state = None
-        self._last_sens = None
         self._stop()
         self.start()
-        self.stop()
 
     def kill(self):
         print("kill cutter..")
         self._stop()
         debug("Q+: None")
-        self._queue.put(None)
+        self.queue.put(None)
 
     def join(self, *args, **kwargs):
         if self._state != 'stop':
@@ -65,36 +45,6 @@ class Cutter(threading.Thread):
         print("STOP : ok")
         self._state = 'stop'
 
-    def _test(self):
-        print("ALL OFF")
-        GPIO.output(Cutter.L, Cutter.OFF)
-        GPIO.output(Cutter.R, Cutter.OFF)
-        time.sleep(0.5)
-        print("Left")
-        GPIO.output(Cutter.R, Cutter.OFF)
-        GPIO.output(Cutter.L, Cutter.ON)
-        time.sleep(1)
-        print("Right")
-        GPIO.output(Cutter.R, Cutter.ON)
-        GPIO.output(Cutter.L, Cutter.OFF)
-        time.sleep(1)
-        print("Repos")
-        self._repos()
-        print("ALL OFF")
-        GPIO.output(Cutter.L, Cutter.OFF)
-        GPIO.output(Cutter.R, Cutter.OFF)
-
-    def _repos(self):
-        GPIO.output(Cutter.L, Cutter.OFF)
-        GPIO.output(Cutter.R, Cutter.OFF)
-        time.sleep(0.1)
-        GPIO.output(Cutter.L, Cutter.ON)
-        time.sleep(0.1)
-        self.wait_pos()
-        GPIO.output(Cutter.L, Cutter.OFF)
-        GPIO.output(Cutter.R, Cutter.OFF)
-
-
     def _turn(self, pin):
         self._state = self._last_sens = pin
         if pin == Cutter.L:
@@ -104,6 +54,102 @@ class Cutter(threading.Thread):
         else:
             print("Unknown pin : {}".format(pin))
         GPIO.output(pin, Cutter.ON)
+
+    def _wait_pos(self):
+        start = time.time()
+        debug("start wait pos..")
+        timeout = True
+        while time.time() - start < Cutter.TIMEOUT:
+            pos = GPIO.input(Cutter.Pos)
+            if Cutter.REPOS == pos:
+                debug("--break")
+                self._stop()
+                timeout = False
+                break
+        if timeout:
+            debug("WAIT POS TIMEOUT ! should be in wrong position")
+            self._stop()
+
+    def run(self):
+        while True:
+            if self._state == 'stop':
+                ev = self.queue.get(block=True)
+            else:
+                try:
+                    ev = self.queue.get(timeout=Cutter.TIMEOUT)
+                except queue.Empty:
+                    print("Emergency stop")
+                    self._stop()
+                    continue
+            if ev == Cutter.STOP:
+                debug("Q- : stop")
+                self._stop()
+            elif ev in (Cutter.R, Cutter.L):
+                debug("Q- : turn {}".format(ev))
+                self._turn(ev)
+            elif ev == Cutter.WAIT_POS:
+                debug("Q- : wait pos")
+                #debug("add ev turn : {}".format(ev))
+                self._wait_pos()
+            else:
+                debug("Q- : ? {}".format(ev))
+                break
+        debug("end_of_cutter")
+        self._stop()
+
+
+class Cutter():
+    DEBUG = False
+
+    R = 5
+    L = 7
+    Pos = 3
+    STOP = 0
+    WAIT_POS = 1
+
+    REPOS = 1
+    ON = GPIO.HIGH
+    OFF = GPIO.LOW
+
+    HALF_TIME = 0.16
+    FULL_TIME = 0.25
+    TIMEOUT = 1 # sec
+
+    def __init__(self, half_time=None, full_time=None, *args, **kwargs):
+        self._fsmcutter = FSMCutter()
+        self.half_time = Cutter.HALF_TIME if half_time is None else half_time
+        self.full_time = Cutter.FULL_TIME if full_time is None else full_time
+        self._cut_full()
+        self._fsmcutter.queue.put(Cutter.STOP)
+
+    def _cut_full(self):
+        self._fsmcutter.queue.put(Cutter.R)
+        time.sleep(0.15)
+        start = time.time()
+        debug("start wait pos..")
+        timeout = True
+        while time.time() - start < Cutter.TIMEOUT:
+            pos = GPIO.input(Cutter.Pos)
+            print(str(pos))
+            if Cutter.REPOS == pos:
+                debug("--break")
+                self._fsmcutter.queue.put(Cutter.STOP)
+                timeout = False
+                break
+        time.sleep(0.05)
+        if GPIO.input(Cutter.Pos) != Cutter.REPOS:
+            print("===== Double !")
+            self._cut_full()
+
+        if timeout:
+            debug("WAIT POS TIMEOUT ! should be in wrong position")
+            self._fsmcutter.queue.put(Cutter.STOP)
+        # self._fsmcutter.queue.put(Cutter.WAIT_POS)
+    def cut_full(self):
+        with self._fsmcutter.lock:
+            self._cut_full()
+
+
 
     def _wait_pos(self):
         start = time.time()
@@ -172,12 +218,9 @@ class Cutter(threading.Thread):
             mode = CUT_FULL
         try:
             debug("Mise en position")
-            self.repos()
+            #self.repos()
             if mode == CUT_FULL:
-                debug("Cut Full")
-                self.turn(Cutter.R)
-                time.sleep(self.full_time)
-                self.repos('L')
+                self._cut_full()
             elif mode == CUT_HALF:
                 debug("Cut Partial")
                 self.turn(Cutter.R)
@@ -189,38 +232,3 @@ class Cutter(threading.Thread):
         except Exception as e:
             self.stop()
             raise e
-
-    def run(self):
-        while True:
-            if self._state == 'stop':
-                ev = self._queue.get(block=True)
-            else:
-                try:
-                    ev = self._queue.get(timeout=Cutter.TIMEOUT)
-                except queue.Empty:
-                    print("Emergency stop")
-                    self._stop()
-                    self._wait_pos()
-                    continue
-            if ev == Cutter.STOP:
-                debug("Q- : stop")
-                self._stop()
-                self._queue.task_done()
-            elif ev in (Cutter.R, Cutter.L):
-                debug("Q- : turn {}".format(ev))
-                #debug("add ev turn : {}".format(ev))
-                self._turn(ev)
-                self._queue.task_done()
-            elif ev == Cutter.WAIT_POS:
-                debug("Q- : wait pos")
-                #debug("add ev turn : {}".format(ev))
-                self._wait_pos()
-                self._queue.task_done()
-            else:
-                debug("Q- : ? {}".format(ev))
-                self._queue.task_done()
-                break
-        debug("end_of_cutter")
-        self._stop()
-
-

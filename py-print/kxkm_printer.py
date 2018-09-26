@@ -28,8 +28,14 @@ class KXKMPrinter(Usb):
         """
 
         if feed:
-            self._raw(ESC + b"d" + six.int2byte(4))
-            time.sleep(0.15)
+            self._raw(ESC + b"d" + six.int2byte(6))
+            time.sleep(0.10)
+#            time.sleep(0.10)
+#            time.sleep(0.10)
+#            time.sleep(0.40)
+#            time.sleep(0.40)
+#            time.sleep(0.40)
+            time.sleep(0.10)
             time.sleep(0.10)
 
         mode = mode.upper()
@@ -47,9 +53,17 @@ class KXKMPrinter(Usb):
 
         time.sleep(0.15)
         time.sleep(0.15)
+#        time.sleep(0.15)
+#        time.sleep(0.15)
+#        time.sleep(0.15)
+#        time.sleep(0.15)
+#        time.sleep(0.45)
+#        time.sleep(0.45)
+#        time.sleep(0.45)
+#        time.sleep(0.45)
 
         if feed:
-            self._raw(ESC + b"d" + six.int2byte(3))
+            self._raw(ESC + b"d" + six.int2byte(4))
             #time.sleep(0.00)
 
 
