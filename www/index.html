@@ -22,7 +22,8 @@
 
   <!-- TEXT -->
   <form action="/printText" method="POST" enctype="multipart/form-data" id="textform">
-    <input type="hidden" id="print_cut_t" name="cut" value="1">
+    <input type="hidden" id="print_cut_t" name="cut" value="cut">
+    <!--<input type="hidden" id="print_cut_full_t" name="cut_full" value="0">-->
     <input type="hidden" id="print_pause_t" name="pause" value="1">
     <input type="hidden" id="print_nbr_t" name="nbr" value="1">
     <div class="file-field input-field">
@@ -38,7 +39,8 @@
   <!-- UPLOAD -->
   <form action="/printFile" method="POST" enctype="multipart/form-data" id="fileform">
     <input type="hidden" id="print_relpath" name="relpath" value="">
-    <input type="hidden" id="print_cut" name="cut" value="1">
+    <input type="hidden" id="print_cut" name="cut" value="cut">
+    <!--<input type="hidden" id="print_cut_full" name="cut_full" value="0">-->
     <input type="hidden" id="print_pause" name="pause" value="1">
     <input type="hidden" id="print_nbr" name="nbr" value="1">
     <div class="file-field input-field">
@@ -73,14 +75,21 @@
       <h4>Print option</h4>
       <div id="print_name"></div>
       <br />
+        <br/>
       <form action="#">
         <!-- Switch -->
-        Cut:
-        <div class="switch">
-          <label><input type="checkbox" id="cut" checked>
-            <span class="lever"></span>
+        <p id="radio_cut">
+          <label style="margin-right: 30px; margin-left: 5px"><input name="cut" type="radio" value="nocut"  />
+            <span>No Cut</span>
           </label>
-        </div>
+          <label style="margin-right: 30px; margin-left: 5px"><input name="cut" type="radio" value="cut" checked />
+            <span>Part Cut</span>
+          </label>
+          <label style="margin-right: 30px; margin-left: 5px"><input name="cut" type="radio" value="fullcut" />
+            <span>Full Cut</span>
+          </label>
+        </p>
+
         <br />
         <!-- NBR -->
         <p class="range-field">
@@ -200,12 +209,10 @@
         $('#print_pause_t').val($('#modal1').find('#pause').val())
       })
 
-      $('#cut').on('change', ()=>{
-        if ($('#cut').prop('checked')) $('#print_cut').val(1)
-        else $('#print_cut').val(0)
-        if ($('#cut').prop('checked')) $('#print_cut_t').val(1)
-        else $('#print_cut_t').val(0)
-        console.log('cut', $('#print_cut').val())
+      $('#radio_cut').on('change', ()=>{
+      	$('#print_cut').val($("input[name='cut']:checked").val());
+      	$('#print_cut_t').val($("input[name='cut']:checked").val());
+        console.log('cut : ', $("input[name='cut']:checked").val());
       })
 
       $('#stop').on('click', ()=>{
