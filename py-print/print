@@ -4,6 +4,8 @@
 # imagemagick
 
 from escpos.printer import Usb
+
+
 import sys, os
 from subprocess import call
 import glob
@@ -88,4 +90,4 @@ for f in files:
 sys.exit(0)
 
 # sudo apt install python-pip libjpeg8-dev imagemagick
-# sudo pip install python-escpos
+# sudo pip3 install python-escpos
