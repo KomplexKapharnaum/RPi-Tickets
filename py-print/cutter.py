@@ -122,24 +122,25 @@ class Cutter():
 #        self._cut_full()
         self._fsmcutter.queue.put(Cutter.STOP)
 
-    def _cut_full(self):
+    def _cut_full(self, start=None):
         self._fsmcutter.queue.put(Cutter.R)
         time.sleep(0.15)
-        start = time.time()
+        if start is None:
+            start = time.time()
         debug("start wait pos..")
         timeout = True
         while time.time() - start < Cutter.TIMEOUT:
             pos = GPIO.input(Cutter.Pos)
-            print(str(pos))
+            #print(str(pos))
             if Cutter.REPOS == pos:
                 debug("--break")
                 self._fsmcutter.queue.put(Cutter.STOP)
                 timeout = False
                 break
         time.sleep(0.05)
-        if GPIO.input(Cutter.Pos) != Cutter.REPOS:
+        if not timeout and GPIO.input(Cutter.Pos) != Cutter.REPOS:
             print("===== Double !")
-            self._cut_full()
+            self._cut_full(start)
 
         if timeout:
             debug("WAIT POS TIMEOUT ! should be in wrong position")
