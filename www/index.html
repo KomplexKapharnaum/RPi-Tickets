@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta charset="utf-8">
-  <title></title>
+  <title>RPi - Tickets printer</title>
   <meta name="description" content="">
   <link type="text/css" rel="stylesheet" href="css/style.css">
   <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
@@ -13,12 +13,13 @@
   <script src="js/materialize.min.js"></script>
 </head>
 <body>
-  <div id="title">IMMOBILES - Tickets Printer</div>
+  <h5>RPi - Tickets printer</h5>
+  <div id="mode"></div>
   <div id="peers"></div>
 
-  <div class="btn" id="salve">
+  <!-- <div class="btn" id="salve">
     <span>Envoyer une salve</span>
-  </div>
+  </div> -->
 
   <!-- TEXT -->
   <form action="/printText" method="POST" enctype="multipart/form-data" id="textform">
@@ -67,7 +68,16 @@
 
   <div id="files"></div>
 
-
+  <!-- Modal Structure -->
+  <div id="modalError" class="modal">
+    <div class="modal-content">
+      <h5>Error</h5>
+      <p id="errorTxt"></p>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-green btn-flat">ok</a>
+    </div>
+  </div>
 
   <!-- Modal Structure -->
   <div id="modal1" class="modal">
@@ -133,11 +143,19 @@
     });
 
     socket.on('peers', (n)=>{
-      if(n == "-1"){
-      	$("#peers").html('Standalone mode - No printers connected')
-      }else{
-	$("#peers").html(n+' printers connected')
-      }
+      $("#peers").html(n+' peers connected')
+    })
+
+    socket.on('error', (e)=>{
+      $("#errorTxt").html(e)
+      $('#modalError').modal('open')
+    })
+
+    socket.on('mode', (m)=>{
+      $("#mode").html('<a onClick="return false;" class="btn-flat tooltipped" data-position="right" data-tooltip="change ALONE variable in index.js code">Mode '+m+'</a>')
+      $('.tooltipped').tooltip();
+      if (m == 'standalone') $("#peers").hide();
+      else $("#peers").show();
     })
 
     socket.on('listNode', (data) => {
@@ -250,11 +268,11 @@
         console.log(job)
         socket.emit('printUsb', job)*/
         console.log($('#print_relpath').val())
-	if ( $('#txt').val() == "" ){
-	        $('#fileform').submit()
-	}else{
-		$('#textform').submit()
-	}
+      	if ( $('#txt').val() == "" ){
+      	        $('#fileform').submit()
+      	}else{
+      		$('#textform').submit()
+      	}
       })
 
     });

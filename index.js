@@ -110,6 +110,7 @@ function print(relpath, cut, buffer, onEnd, text) {
     if(fs.existsSync(filepath) && filepath.startsWith('/tmp')) fs.unlink(filepath, ()=>{})
     if (err) {
       console.error(`exec error: ${err}`);
+      if (err.message.includes('USBNotFoundError')) io.emit('error', 'USB printer not found...<br>check if printer is powered on and connected');
       return;
     }
     if (onEnd) onEnd()
@@ -238,11 +239,9 @@ io.on('connection', function(client) {
 
 function countingPeers() {
   // console.log(PeerMachine.peersCount())
-  if(ALONE){
-  	io.emit('peers', -1)
-  }else{
-        io.emit('peers', PeerMachine.peersCount())
-  }
+  io.emit('peers', PeerMachine.peersCount())
+  if(ALONE) io.emit('mode', 'standalone')
+  else io.emit('mode', 'linked')
 }
 setInterval(countingPeers, 3000);
 
