@@ -9,7 +9,7 @@ var path = require('path')
 var in_array = require('in_array')
 const { spawnSync, exec} = require('child_process');
 
-var WEBPORT = 80
+var WEBPORT = 8090
 var ALONE = true	// Set if the printer should act ALONE or not (with PeerMachine)
 
 var LISTPATH = '/mnt/usb'
