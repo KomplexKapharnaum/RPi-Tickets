@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <title></title>
+  <meta name="description" content="">
+  <link type="text/css" rel="stylesheet" href="static/css/style.css">
+  <link type="text/css" rel="stylesheet" href="static/css/materialize.min.css"  media="screen,projection"/>
+  <script src="static/js/jquery-3.3.1.min.js"></script>
+  <script src="static/js/materialize.min.js"></script>
+</head>
+<body>
+  <div id="title" style="font-size: 120%;">RIDA - Tickets Printer</div>
+  <div id="peers"></div>
+  <div id="printer_mode"></div>
+
+  <div style="height: 5vh"></div>
+
+  <div class="btn" id="printTicket" style="height: 20vh;">
+    <span style="font-size: 180%; line-height: 20vh; vertical-align: middle;">SORTIR UN TICKET</span>
+  </div>
+
+
+	<div style="margin-top: 5vh; height: 50vh">
+		<table>
+			<tr>
+				<td>Nombre de ticket restant</td>
+				<td>{{ pool_len }}</td>
+			</tr>
+			<tr>
+				<td>Ticket gagnant sorti ?</td>
+				<td>{% if winner_remain %}Pas encore{% else %}Oui{% endif %}</td>
+			</tr>
+			<tr>
+				<td>Conservation de l'état</td>
+				<td>{% if infile %}Oui{% else %}NON !{% endif %}</td>
+			</tr>
+		</table>
+	</div>
+
+  <div class="btn" id="config">
+    <span>Config</span>
+  </div>
+  <div class="btn" id="reset">
+    <span>Reset</span>
+  </div>
+  <div class="btn" id="stop">
+    <span>Stop !</span>
+  </div>
+
+
+
+  <div id="files"></div>
+
+
+
+  <!-- Modal Structure -->
+  <div id="modal1" class="modal">
+    <div class="modal-content">
+      <h4>Print option</h4>
+      <div id="print_name"></div>
+      <br />
+        <br/>
+      <form action="/config">
+        <!-- Switch -->
+        <p id="radio_cut">
+          <label style="margin-right: 30px; margin-left: 5px"><input name="cut" type="radio" value="nocut"  />
+            <span>No Cut</span>
+          </label>
+          <label style="margin-right: 30px; margin-left: 5px"><input name="cut" type="radio" value="cut" checked />
+            <span>Part Cut</span>
+          </label>
+          <label style="margin-right: 30px; margin-left: 5px"><input name="cut" type="radio" value="full" />
+            <span>Full Cut</span>
+          </label>
+        </p>
+
+        <!-- FAST -->
+        <p class="range-field">
+          <label><input type="checkbox" name="fast" id="fast" /><span>Fast</span></label>
+        </p>
+
+        <br />
+        <!-- NBR -->
+        <p class="range-field">
+          Quantity: <span id="nbr_i">1</span>
+          <input type="range" id="nbr" min="1" max="30" value="1" />
+        </p>
+        <!-- PAUSE -->
+        <p class="range-field">
+          Pause between: <span id="pause_i">1</span> ms
+          <input type="range" id="pause" min="1" max="4000" value="1" />
+        </p>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat" id="doPrint">PRINT</a>
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+    </div>
+  </div>
+
+  <!-- Modal Structure -->
+  <div id="modal2" class="modal">
+    <div class="modal-content">
+      <h4>Printer configuration</h4>
+        <br/>
+      <form id="configform" action="/config" method="POST" enctype="multipart/form-data">
+        <!-- Switch -->
+        <p id="radio_config_alone">
+          Connection :
+          <label style="margin-right: 30px; margin-left: 5px"><input name="alone" type="radio" value="alone" />
+            <span>Standalone</span>
+          </label>
+          <label style="margin-right: 30px; margin-left: 5px"><input name="alone" type="radio" value="peers"  />
+            <span>Peers</span>
+          </label>
+        </p> <br />
+        <p id="radio_config_old">
+          Imprimante :
+          <label style="margin-right: 30px; margin-left: 5px"><input name="old" type="radio" value="fullcut" />
+            <span>Modified</span>
+          </label>
+          <label style="margin-right: 30px; margin-left: 5px"><input name="old" type="radio" value="old"  />
+            <span>Vanilla</span>
+          </label>
+        </p>
+
+      </form>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat" id="doConfig">SAVE</a>
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+    </div>
+  </div>
+
+  <script>
+
+
+    function addDirectory(list, container) {
+      var ul = $('<ul class="collapsible">').appendTo(container)
+
+      for (var el of list) {
+
+        // directory
+        if (el.children) {
+          if (el.children.length) {
+            var li = $('<li>').appendTo(ul)
+            var hd = $('<div class="collapsible-header">')
+                        .append('<i class="material-icons">folder_open</i>')
+                        .append(el.name).appendTo(li)
+            var bd = $('<div class="collapsible-body">').appendTo(li)
+            addDirectory(el.children, bd)
+            li.addClass('directory')
+          }
+        }
+        // file
+        else {
+          var li = $('<li>').appendTo(ul)
+          var hd = $('<div class="collapsible-header">')
+                        // .append('<i class="material-icons">image</i>')
+                        .append('<label><input class="filebox" type="checkbox" value="'+el.relpath+'" /><span></span></label>')
+                        .append(el.name).appendTo(li)
+          li.addClass('file')
+        }
+      }
+    }
+
+
+    $(document).ready(function(){
+      $('.modal').modal()
+
+      $('#nbr').on('change', ()=>{
+        $('#nbr_i').html($('#modal1').find('#nbr').val())
+        $('#print_nbr').val($('#modal1').find('#nbr').val())
+        $('#print_nbr_t').val($('#modal1').find('#nbr').val())
+      })
+      $('#nbr').on('input', ()=>{
+        $('#nbr_i').html($('#modal1').find('#nbr').val())
+        $('#print_nbr').val($('#modal1').find('#nbr').val())
+        $('#print_nbr_t').val($('#modal1').find('#nbr').val())
+      })
+
+      $('#fast').on('input', ()=>{
+        $('#print_fast').val($("#fast:checked").val());
+        $('#print_fast_t').val($("#fast:checked").val());
+        console.log('fast : ', $("#fast:checked").val());
+      })
+
+      $('#pause').on('change', ()=>{
+        $('#pause_i').html($('#modal1').find('#pause').val())
+        $('#print_pause').val($('#modal1').find('#pause').val())
+        $('#print_pause_t').val($('#modal1').find('#pause').val())
+      })
+      $('#pause').on('input', ()=>{
+        $('#pause_i').html($('#modal1').find('#pause').val())
+        $('#print_pause').val($('#modal1').find('#pause').val())
+        $('#print_pause_t').val($('#modal1').find('#pause').val())
+      })
+
+      $('#radio_cut').on('change', ()=>{
+      	$('#print_cut').val($("input[name='cut']:checked").val());
+      	$('#print_cut_t').val($("input[name='cut']:checked").val());
+        console.log('cut : ', $("input[name='cut']:checked").val());
+      })
+
+      $('#stop').on('click', ()=>{
+        window.location.replace("/stop");
+      })
+
+      $('#reset').on('click', ()=>{
+        window.location.replace("/reset");
+      })
+
+      $('#printTicket').on('click', ()=>{
+        window.location.replace("/printTicket");
+      })
+
+
+      $('#fileprint').on('click', ()=>{
+        var selectedFiles = []
+        $('.filebox:checkbox:checked').each((i, el)=>{
+          // console.log($(el).val())
+          selectedFiles.push($(el).val())
+
+        })
+        console.log(selectedFiles)
+        $('#print_relpath').val(selectedFiles.join(','))
+        $('#modal1').modal('open')
+      })
+
+      $('#doPrint').on('click', ()=> {
+        /*var job = {
+          files: [],
+          cut: $('#modal1').find('#print_cut').prop('checked'),
+          cut: $('#modal1').find('#print_cut_t').prop('checked'),
+          nbr: $('#modal1').find('#print_nbr').val(),
+          nbr: $('#modal1').find('#print_nbr_t').val(),
+          pause: $('#modal1').find('#print_pause').val(),
+          pause: $('#modal1').find('#print_pause_t').val(),
+        }
+        job.files.push({relpath:$('#modal1').find('#print_relpath').val(), data:null})
+        console.log(job)
+        socket.emit('printUsb', job)*/
+        console.log($('#print_relpath').val())
+	if ( $('#txt').val() == "" ){
+	        $('#fileform').submit()
+	}else{
+		$('#textform').submit()
+	}
+      })
+
+      $('#config').on('click', ()=>{
+        $('#modal2').modal('open')
+      });
+
+      $('#doConfig').on('click', ()=>{
+          $('#configform').submit();
+      });
+
+    });
+
+  </script>
+</body>
+</html>
